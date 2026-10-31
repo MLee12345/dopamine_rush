@@ -443,7 +443,6 @@
     <section id="page-profile" class="hidden space-y-6">
       <div class="bg-white border border-zinc-200 rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div>
-          <div class="text-xs font-bold uppercase tracking-wider text-indigo-600">Profile</div>
           <div id="profileIdentity" class="space-y-1">
             <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold text-zinc-950 hover:text-indigo-700 cursor-pointer">Guest</h2>
             <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 hover:text-indigo-700 cursor-pointer">Choose your city</div>
@@ -1227,6 +1226,21 @@
       { label: 'Half fees', fullLabel: 'Half-off service fees', discount: 6, flat: 0, wallet: 0 }
     ];
 
+    const WORLD_CITY_OPTIONS = [
+      'Abidjan', 'Abu Dhabi', 'Accra', 'Addis Ababa', 'Adelaide', 'Ahmedabad', 'Algiers', 'Amsterdam', 'Anchorage', 'Ankara',
+      'Athens', 'Atlanta', 'Auckland', 'Austin', 'Baghdad', 'Baku', 'Baltimore', 'Bangalore', 'Bangkok', 'Barcelona',
+      'Beijing', 'Beirut', 'Belfast', 'Belgrade', 'Berlin', 'Bogota', 'Boston', 'Brasilia', 'Brisbane', 'Brussels',
+      'Budapest', 'Buenos Aires', 'Cairo', 'Calgary', 'Cape Town', 'Caracas', 'Casablanca', 'Chicago', 'Copenhagen', 'Dallas',
+      'Delhi', 'Denver', 'Detroit', 'Doha', 'Dubai', 'Dublin', 'Edinburgh', 'Frankfurt', 'Geneva', 'Glasgow',
+      'Guangzhou', 'Hamburg', 'Hanoi', 'Helsinki', 'Hong Kong', 'Honolulu', 'Houston', 'Istanbul', 'Jakarta', 'Jerusalem',
+      'Johannesburg', 'Karachi', 'Kathmandu', 'Kigali', 'Kingston', 'Kolkata', 'Kuala Lumpur', 'Lagos', 'Lima', 'Lisbon',
+      'Los Angeles, CA', 'Madrid', 'Manila', 'Melbourne', 'Mexico City', 'Miami', 'Milan', 'Montreal', 'Moscow', 'Mumbai',
+      'Munich', 'Nairobi', 'New Orleans', 'New York, NY', 'Osaka', 'Oslo', 'Paris', 'Perth', 'Philadelphia', 'Phoenix',
+      'Portland', 'Prague', 'Reykjavik', 'Rio de Janeiro', 'Rome', 'San Diego', 'San Francisco', 'San Jose', 'Santiago', 'Sao Paulo',
+      'Seattle', 'Seoul', 'Shanghai', 'Singapore', 'Stockholm', 'Sydney', 'Taipei', 'Tel Aviv', 'Tokyo', 'Toronto',
+      'Vancouver', 'Vienna', 'Warsaw', 'Washington, DC', 'Wellington', 'Zurich'
+    ];
+
     function getConcertFallbackImage(idx) {
       return EVENT_IMAGE_POOL[idx % EVENT_IMAGE_POOL.length];
     }
@@ -1444,6 +1458,9 @@
       doorHoldTimer: null,
       doorHoldProgress: 0,
       doorHoldTicketId: '',
+      doorHoldFrame: null,
+      doorHoldReleaseFrame: null,
+      doorHoldStartedAt: 0,
       queueClicksNeeded: 12,
       stageCam: 'Main Stage',
       stageTrackIndex: 0,
@@ -1673,40 +1690,26 @@
       const name = state.account ? state.account.username : 'Guest';
       const city = state.account?.city || 'Choose your city';
       const editableClass = state.account && !state.account.guest ? 'hover:text-indigo-700 cursor-pointer' : '';
+      const editingName = state.profileEditField === 'username';
+      const editingCity = state.profileEditField === 'city';
+      const citySuggestions = editingCity ? getCityOptions(state.account?.city || '').slice(0, 8) : [];
       holder.innerHTML = `
-        <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold text-zinc-950 ${editableClass}">${escapeHtml(name)}</h2>
-        <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(city)}</div>
-      `;
-    }
-
-    function escapeHtml(value) {
-      return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
-    }
-
-    function getCityOptions(query = '') {
-      const cities = [...new Set(Object.values(VENUES).map(venue => venue.city))].sort();
-      const cleanQuery = query.trim().toLowerCase();
-      if (!cleanQuery) return cities;
-      return cities.filter(city => city.toLowerCase().includes(cleanQuery));
-    }
-
-    function beginProfileEdit(field) {
-      if (!state.account || state.account.guest) return;
-      state.profileEditField = field;
-      renderProfileIdentityEditor(field);
-    }
-
-    function renderProfileIdentityEditor(field, valueOverride = null) {
-      const holder = document.getElementById('profileIdentity');
-      if (!holder || !state.account) return;
-      const value = valueOverride ?? (field === 'username' ? state.account.username : (state.account.city || ''));
-      const suggestions = field === 'city' ? getCityOptions(value).slice(0, 5) : [];
-      holder.innerHTML = `
-        <div class="relative max-w-xs">
-          <input id="profileEditInput" value="${escapeHtml(value)}" oninput="handleProfileEditInput('${field}', this.value)" onkeydown="handleProfileEditKey(event, '${field}')" onblur="saveProfileEdit('${field}')" class="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-950 focus:outline-none focus:border-indigo-500">
-          ${field === 'city' ? `<div id="profileCitySuggestions" class="${suggestions.length ? '' : 'hidden'} absolute left-0 right-0 top-[calc(100%+6px)] z-30 rounded-xl border border-indigo-200 bg-white p-1 shadow-xl">
-            ${renderProfileCitySuggestions(suggestions)}
-          </div>` : ''}
+        <div class="relative">
+          ${editingName ? `
+            <input id="profileEditInput" value="${escapeHtml(name)}" onkeydown="handleProfileEditKey(event, 'username')" onblur="saveProfileEdit('username')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-2xl font-extrabold leading-tight text-zinc-950 focus:outline-none focus:border-indigo-600" style="width:${Math.max(5, name.length)}ch">
+          ` : `
+            <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold leading-tight text-zinc-950 ${editableClass}">${escapeHtml(name)}</h2>
+          `}
+        </div>
+        <div class="relative inline-block max-w-xs">
+          ${editingCity ? `
+            <input id="profileEditInput" value="${escapeHtml(state.account?.city || '')}" oninput="handleProfileEditInput('city', this.value)" onkeydown="handleProfileEditKey(event, 'city')" onblur="saveProfileEdit('city')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-sm leading-normal text-zinc-700 focus:outline-none focus:border-indigo-600" style="width:${Math.max(14, (state.account?.city || 'Choose your city').length)}ch">
+            <div id="profileCitySuggestions" class="${citySuggestions.length ? '' : 'hidden'} absolute left-0 min-w-56 top-[calc(100%+6px)] z-30 rounded-xl border border-indigo-200 bg-white p-1 shadow-xl">
+              ${renderProfileCitySuggestions(citySuggestions)}
+            </div>
+          ` : `
+            <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(city)}</div>
+          `}
         </div>
       `;
       const input = document.getElementById('profileEditInput');
@@ -1716,13 +1719,35 @@
       }
     }
 
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+    }
+
+    function getCityOptions(query = '') {
+      const timeZoneCities = typeof Intl.supportedValuesOf === 'function'
+        ? Intl.supportedValuesOf('timeZone').map(zone => zone.split('/').at(-1).replace(/_/g, ' '))
+        : [];
+      const cities = [...new Set([...Object.values(VENUES).map(venue => venue.city), ...WORLD_CITY_OPTIONS, ...timeZoneCities])].sort();
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) return cities;
+      return cities.filter(city => city.toLowerCase().includes(cleanQuery));
+    }
+
+    function beginProfileEdit(field) {
+      if (!state.account || state.account.guest) return;
+      state.profileEditField = field;
+      renderProfileIdentityDisplay();
+    }
+
     function handleProfileEditInput(field, value) {
       if (field !== 'city') return;
       const menu = document.getElementById('profileCitySuggestions');
       if (!menu) return;
-      const suggestions = getCityOptions(value).slice(0, 5);
+      const suggestions = getCityOptions(value).slice(0, 8);
       menu.innerHTML = renderProfileCitySuggestions(suggestions);
       menu.classList.toggle('hidden', !suggestions.length);
+      const input = document.getElementById('profileEditInput');
+      if (input) input.style.width = `${Math.max(14, value.length || 14)}ch`;
     }
 
     function renderProfileCitySuggestions(suggestions) {
@@ -2011,6 +2036,8 @@
       venue.sections.forEach(section => section.seatsAvailable = Math.max(3, section.seatsAvailable));
       state.selectedSection = getSortedSectionsByPrice(venue).find(sec => sec.seatsAvailable > 0) || venue.sections[0];
       state.selectedQty = 1;
+      const qtyText = document.getElementById('ticketQtyText');
+      if (qtyText) qtyText.innerText = '1';
       state.pendingCheckout = null;
 
       document.getElementById('modalArtistTitle').innerText = `${state.selectedConcert.artist} — ${state.selectedConcert.tour}`;
@@ -2677,26 +2704,43 @@
       cancelDoorHold();
       state.doorHoldTicketId = ticketId;
       state.doorHoldProgress = 0;
+      state.doorHoldStartedAt = performance.now();
       const fill = document.getElementById(`doorLockFill-${ticketId}`);
       if (fill) fill.style.width = '0%';
-      state.doorHoldTimer = setInterval(() => {
-        state.doorHoldProgress += 5;
+      const animate = now => {
+        state.doorHoldProgress = Math.min(100, ((now - state.doorHoldStartedAt) / 1100) * 100);
         const activeFill = document.getElementById(`doorLockFill-${ticketId}`);
-        if (activeFill) activeFill.style.width = `${Math.min(100, state.doorHoldProgress)}%`;
+        if (activeFill) activeFill.style.width = `${state.doorHoldProgress}%`;
         if (state.doorHoldProgress >= 100) {
           cancelDoorHold(false);
           toggleDoorStatus(ticketId);
+          return;
         }
-      }, 55);
+        state.doorHoldFrame = requestAnimationFrame(animate);
+      };
+      state.doorHoldFrame = requestAnimationFrame(animate);
     }
 
     function cancelDoorHold(reset = true) {
       if (state.doorHoldTimer) clearInterval(state.doorHoldTimer);
+      if (state.doorHoldFrame) cancelAnimationFrame(state.doorHoldFrame);
+      if (state.doorHoldReleaseFrame) cancelAnimationFrame(state.doorHoldReleaseFrame);
       if (reset && state.doorHoldTicketId) {
+        const ticketId = state.doorHoldTicketId;
+        const startProgress = state.doorHoldProgress;
+        const started = performance.now();
         const fill = document.getElementById(`doorLockFill-${state.doorHoldTicketId}`);
-        if (fill) fill.style.width = '0%';
+        const release = now => {
+          const nextProgress = Math.max(0, startProgress - ((now - started) / 500) * 100);
+          if (fill) fill.style.width = `${nextProgress}%`;
+          if (nextProgress > 0 && state.doorHoldTicketId === '') {
+            state.doorHoldReleaseFrame = requestAnimationFrame(release);
+          }
+        };
+        state.doorHoldReleaseFrame = requestAnimationFrame(release);
       }
       state.doorHoldTimer = null;
+      state.doorHoldFrame = null;
       state.doorHoldProgress = 0;
       state.doorHoldTicketId = '';
     }
@@ -3100,21 +3144,39 @@
     function toggleMerchOptionMenu(itemId, field) {
       const key = `${itemId}-${field}`;
       state.openMerchMenuKey = state.openMerchMenuKey === key ? '' : key;
-      renderMerchItems();
+      syncMerchOptionMenus();
     }
 
     function selectMerchOption(itemId, field, value) {
       const current = state.merchPendingOptions[itemId] || {};
       state.merchPendingOptions[itemId] = { ...current, [field]: value };
       state.openMerchMenuKey = '';
-      renderMerchItems();
+      syncMerchOptionMenus();
     }
 
     function handleMerchDropdownOutsideClick(event) {
       if (event.target.closest('.merch-option-root')) return;
       if (!state.openMerchMenuKey) return;
       state.openMerchMenuKey = '';
-      if (state.activeMerchConcert && !document.getElementById('merchModal').classList.contains('hidden')) renderMerchItems();
+      syncMerchOptionMenus();
+    }
+
+    function syncMerchOptionMenus() {
+      document.querySelectorAll('[data-merch-option-menu]').forEach(menu => {
+        const itemId = menu.dataset.itemId;
+        const field = menu.dataset.field;
+        const selected = state.merchPendingOptions[itemId]?.[field] || '';
+        const key = `${itemId}-${field}`;
+        menu.classList.toggle('hidden', state.openMerchMenuKey !== key);
+        const label = document.getElementById(`merchOptionLabel-${itemId}-${field}`);
+        if (label) label.innerText = selected || menu.dataset.placeholder || '';
+        menu.querySelectorAll('[data-option-value]').forEach(button => {
+          const isSelected = button.dataset.optionValue === selected;
+          button.classList.toggle('bg-emerald-500/10', isSelected);
+          const check = button.querySelector('.merch-option-check');
+          if (check) check.classList.toggle('hidden', !isSelected);
+        });
+      });
     }
 
     function renderMerchOptionDropdown(itemId, field, options, placeholder) {
@@ -3124,13 +3186,13 @@
       return `
         <div class="relative merch-option-root">
           <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 hover:border-emerald-500 rounded-lg px-3 py-2 text-xs font-bold text-white flex items-center justify-between">
-            <span>${selected || placeholder}</span>
+            <span id="merchOptionLabel-${itemId}-${field}">${selected || placeholder}</span>
             <i class="fa-solid fa-chevron-down text-[10px] text-emerald-400"></i>
           </button>
-          <div class="${isOpen ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
+          <div id="merchOptionMenu-${itemId}-${field}" data-merch-option-menu data-item-id="${itemId}" data-field="${field}" data-placeholder="${placeholder}" class="${isOpen ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
             ${options.map(option => `
-              <button type="button" onclick="selectMerchOption('${itemId}', '${field}', '${option.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-zinc-100 hover:bg-emerald-500/15 flex items-center justify-between">
-                <span>${option}</span>${selected === option ? '<i class="fa-solid fa-check text-emerald-400"></i>' : ''}
+              <button type="button" data-option-value="${escapeHtml(option)}" onclick="selectMerchOption('${itemId}', '${field}', '${option.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-zinc-100 hover:bg-emerald-500/15 flex items-center justify-between ${selected === option ? 'bg-emerald-500/10' : ''}">
+                <span>${option}</span><i class="merch-option-check fa-solid fa-check text-emerald-400 ${selected === option ? '' : 'hidden'}"></i>
               </button>
             `).join('')}
           </div>
@@ -3150,10 +3212,17 @@
 
     function renderMerchItems() {
       const container = document.getElementById('merchItemsList');
-      container.innerHTML = '';
       normalizeMerchCart();
+      const concertId = state.activeMerchConcert?.id || '';
+      if (container.dataset.concertId !== concertId) {
+        container.innerHTML = '';
+        container.dataset.concertId = concertId;
+      }
+      const activeRowIds = new Set();
 
       state.activeMerchConcert.merch.forEach(item => {
+        const rowId = `merchRow-${item.id}`;
+        activeRowIds.add(rowId);
         const itemEntries = getMerchCartEntries().filter(entry => entry.itemId === item.id);
         const qty = itemEntries.reduce((sum, entry) => sum + entry.qty, 0);
         const stock = state.merchStock[`${state.activeMerchConcert.id}-${item.id}`] || 3;
@@ -3171,29 +3240,40 @@
             `).join('')}
           </div>
         ` : '';
-        const row = document.createElement('div');
-        row.className = "p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between gap-3";
-
-        row.innerHTML = `
+        let row = document.getElementById(rowId);
+        if (!row) {
+          row = document.createElement('div');
+          row.id = rowId;
+          row.className = "p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between gap-3";
+          row.innerHTML = `
           <div class="flex items-center space-x-3 min-w-0">
             <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='${item.imgFallback || getMerchFallbackImage(item.name)}'" class="w-12 h-12 rounded-lg object-cover bg-zinc-800">
-            <div class="min-w-0">
-              <div class="text-xs font-bold text-white">${item.name}${qty > 1 ? ` <span class="text-zinc-400">x${qty}</span>` : ''}</div>
-              <div class="text-xs text-emerald-400 font-semibold">$${item.price}${state.merchPreviewOnly ? '' : ` <span class="ml-1 text-amber-300">Only ${stock} left</span>`}</div>
-              ${variants}
-              ${controls}
-            </div>
+            <div class="min-w-0" data-merch-copy></div>
           </div>
 
-          <div class="${state.merchPreviewOnly ? 'hidden' : 'flex'} items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
-            <button onclick="updateMerchItemQty('${item.id}', -1)" class="w-6 h-6 rounded bg-zinc-800 text-white flex items-center justify-center font-bold text-xs hover:bg-zinc-700">-</button>
-            <span class="w-5 text-center font-bold text-white text-xs">${qty}</span>
-            <button onclick="updateMerchItemQty('${item.id}', 1)" class="w-6 h-6 rounded bg-zinc-800 text-white flex items-center justify-center font-bold text-xs hover:bg-zinc-700">+</button>
-          </div>
+          <div data-merch-stepper></div>
         `;
-        container.appendChild(row);
+          container.appendChild(row);
+        }
+        row.querySelector('[data-merch-copy]').innerHTML = `
+          <div class="text-xs font-bold text-white">${item.name}${qty > 1 ? ` <span class="text-zinc-400">x${qty}</span>` : ''}</div>
+          <div class="text-xs text-emerald-400 font-semibold">$${item.price}${state.merchPreviewOnly ? '' : ` <span class="ml-1 text-amber-300">Only ${stock} left</span>`}</div>
+          ${variants}
+          ${controls}
+        `;
+        const stepper = row.querySelector('[data-merch-stepper]');
+        stepper.className = `${state.merchPreviewOnly ? 'hidden' : 'flex'} items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-lg p-1`;
+        stepper.innerHTML = `
+          <button onclick="updateMerchItemQty('${item.id}', -1)" class="w-6 h-6 rounded bg-zinc-800 text-white flex items-center justify-center font-bold text-xs hover:bg-zinc-700">-</button>
+          <span class="w-5 text-center font-bold text-white text-xs">${qty}</span>
+          <button onclick="updateMerchItemQty('${item.id}', 1)" class="w-6 h-6 rounded bg-zinc-800 text-white flex items-center justify-center font-bold text-xs hover:bg-zinc-700">+</button>
+        `;
       });
 
+      Array.from(container.children).forEach(child => {
+        if (child.id && !activeRowIds.has(child.id)) child.remove();
+      });
+      syncMerchOptionMenus();
       updateMerchCartTotal();
     }
 
