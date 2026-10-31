@@ -130,6 +130,7 @@
       font-weight: 800;
       line-height: 1.05;
       text-align: center;
+      writing-mode: vertical-rl;
       text-shadow: 0 1px 3px rgba(0,0,0,0.55);
       pointer-events: none;
     }
@@ -174,24 +175,6 @@
     }
     .toast-animate {
       animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    #page-account {
-      position: relative;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 18% 20%, rgba(16, 185, 129, 0.22), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(79, 70, 229, 0.24), transparent 26%),
-        linear-gradient(135deg, rgba(15, 23, 42, 0.03) 25%, transparent 25%) 0 0 / 22px 22px;
-      border-radius: 24px;
-    }
-    #page-account::before {
-      content: "";
-      position: absolute;
-      inset: 8% -8% auto -8%;
-      height: 42%;
-      background: repeating-linear-gradient(115deg, rgba(79,70,229,0.08) 0 2px, transparent 2px 18px);
-      transform: rotate(-2deg);
-      pointer-events: none;
     }
     .account-input-error {
       border-color: #ef4444 !important;
@@ -266,9 +249,6 @@
       background-size: 5px 5px, 5px 5px;
       background-repeat: no-repeat;
     }
-    .wheel-locked {
-      filter: grayscale(0.65) brightness(0.58);
-    }
     .wheel-win-pop {
       animation: toastSlide 0.2s ease-out forwards;
     }
@@ -334,10 +314,6 @@
       <div class="w-full max-w-lg overflow-hidden bg-zinc-950 border border-indigo-300/20 rounded-3xl shadow-2xl shadow-indigo-950/30">
         <div class="p-6 sm:p-8 bg-[linear-gradient(135deg,_#312e81,_#111827_52%,_#09090b)]">
           <div class="mb-6 space-y-4">
-            <div class="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-200">
-              <i class="fa-solid fa-sparkles"></i>
-              Member access
-            </div>
             <div>
               <h1 class="text-3xl font-black text-white leading-tight">Start your vault.</h1>
             </div>
@@ -357,7 +333,6 @@
             </div>
           </div>
         <div id="accountChoiceView" class="space-y-3">
-          <div class="text-[11px] font-black uppercase tracking-wider text-emerald-200">Member access</div>
           <button onclick="showAccountForm('signup')" class="w-full bg-emerald-400 hover:bg-emerald-300 text-zinc-950 rounded-2xl py-3.5 text-sm font-black shadow-lg shadow-emerald-500/20">
             Create account
           </button>
@@ -420,10 +395,10 @@
             <div id="locationFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
           <div class="relative">
-            <button id="dateFilterButton" onclick="toggleFilterMenu('date')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
-              <span>Any date</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
-            </button>
-            <div id="dateFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
+            <label class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex flex-col justify-center">
+              <span class="text-[10px] uppercase tracking-wider text-indigo-700">Date</span>
+              <input id="dateFilterInput" type="date" onchange="handleDateFilter(this.value)" class="bg-transparent text-xs font-bold text-indigo-950 focus:outline-none [color-scheme:light]">
+            </label>
           </div>
           <div class="h-full min-h-[58px] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950">
             <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0–$300</span></div>
@@ -733,8 +708,7 @@
         <!-- Queue Line Countdown Widget -->
         <div class="space-y-3 py-2">
           <button id="joinQueueBox" onclick="chargeMerchAccess()" class="w-full bg-zinc-950 border border-zinc-800 hover:border-emerald-500 rounded-xl p-4 text-left transition-all">
-            <span class="block text-sm font-bold text-white">Charge merch access</span>
-            <span class="block text-xs text-zinc-400 mt-1">Tap steadily to move up. Short pauses will not wipe you out.</span>
+            <span class="block text-sm font-bold text-white">Tap to move up</span>
           </button>
 
           <!-- Progress Bar Decay -->
@@ -743,7 +717,7 @@
           </div>
 
           <p class="text-[11px] text-zinc-400 text-center" id="queueStatusSubtext">
-            Repeated clicks fill the bar. Pausing lets it discharge.
+            Keep the bar charged.
           </p>
         </div>
       </div>
@@ -754,7 +728,6 @@
         </div>
         <div>
           <h3 class="text-2xl font-black text-white">You've reached the front!</h3>
-          <p class="text-sm text-zinc-400 mt-1">The booth is holding your place. Continue when you're ready to pick merch.</p>
         </div>
         <button onclick="continueToMerchShop()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20">
           Continue to buy
@@ -840,7 +813,6 @@
       <div class="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
         <div>
           <h3 class="text-lg font-bold text-white">Daily Deals Wheel</h3>
-          <p class="text-xs text-zinc-400">Spin once per day for checkout discounts and wallet deals.</p>
         </div>
         <button onclick="closeWheelModal()" class="w-8 h-8 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
@@ -849,13 +821,13 @@
       <div class="p-6 space-y-5">
         <div class="flex items-center justify-center">
           <div class="relative">
-            <div class="wheel-pointer absolute left-1/2 -top-2 -translate-x-1/2 z-20 text-zinc-100">
+            <div id="wheelPointer" class="wheel-pointer absolute left-1/2 -top-2 -translate-x-1/2 z-20 text-zinc-100">
               <i class="fa-solid fa-caret-down text-3xl"></i>
             </div>
             <button onclick="spinDiscountWheel()" class="relative w-72 h-72 rounded-full border-4 border-white wheel-face wheel-spin flex items-center justify-center text-white text-lg font-black overflow-hidden" id="discountWheel">
               <span class="relative z-10 bg-zinc-950/95 border border-white/30 rounded-full w-20 h-20 flex items-center justify-center shadow-xl">SPIN</span>
             </button>
-            <div id="wheelLockedOverlay" class="hidden absolute inset-0 rounded-full bg-zinc-950/72 border-4 border-white/20 z-30 flex flex-col items-center justify-center text-center px-8 text-white">
+            <div id="wheelLockedOverlay" class="hidden w-72 h-72 rounded-3xl bg-zinc-950 border border-zinc-700 z-30 flex flex-col items-center justify-center text-center px-8 text-white shadow-2xl">
               <i class="fa-solid fa-lock text-3xl mb-2 text-emerald-300"></i>
               <div class="text-sm font-black">One spin per day</div>
               <div id="wheelCountdownText" class="text-xs text-zinc-300 mt-1">Resets soon</div>
@@ -996,6 +968,7 @@
         genre: 'Electronic',
         venueId: 'sphere',
         date: 'TONIGHT • 8:00 PM',
+        dateKey: '2026-10-31',
         isLiveNow: true,
         isEnded: false,
         priceFrom: 120,
@@ -1013,6 +986,7 @@
         genre: 'Pop',
         venueId: 'msg',
         date: 'TOMORROW • 7:30 PM',
+        dateKey: '2026-11-01',
         isLiveNow: true,
         isEnded: false,
         priceFrom: 155,
@@ -1029,6 +1003,7 @@
         genre: 'Rock',
         venueId: 'redrocks',
         date: 'FRI, NOV 4 • 6:30 PM',
+        dateKey: '2026-11-04',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 85,
@@ -1045,6 +1020,7 @@
         genre: 'Hip-Hop',
         venueId: 'o2',
         date: 'SAT, NOV 12 • 9:00 PM',
+        dateKey: '2026-11-12',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 110,
@@ -1061,6 +1037,7 @@
         genre: 'Pop',
         venueId: 'hollywoodbowl',
         date: 'SUN, NOV 20 • 7:00 PM',
+        dateKey: '2026-11-20',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 110,
@@ -1077,6 +1054,7 @@
         genre: 'Hip-Hop',
         venueId: 'msg',
         date: 'THU, NOV 24 • 8:30 PM',
+        dateKey: '2026-11-24',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 135,
@@ -1093,6 +1071,7 @@
         genre: 'Pop',
         venueId: 'o2',
         date: 'FRI, NOV 25 • 8:00 PM',
+        dateKey: '2026-11-25',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 95,
@@ -1109,6 +1088,7 @@
         genre: 'Pop',
         venueId: 'sphere',
         date: 'SAT, NOV 26 • 9:00 PM',
+        dateKey: '2026-11-26',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 145,
@@ -1125,6 +1105,7 @@
         genre: 'Rock',
         venueId: 'redrocks',
         date: 'SUN, NOV 27 • 7:30 PM',
+        dateKey: '2026-11-27',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 90,
@@ -1141,6 +1122,7 @@
         genre: 'Pop',
         venueId: 'hollywoodbowl',
         date: 'MON, NOV 28 • 8:00 PM',
+        dateKey: '2026-11-28',
         isLiveNow: false,
         isEnded: false,
         priceFrom: 105,
@@ -1272,6 +1254,14 @@
     const ROTATING_TOURS = ['Night Market Live', 'Signal Bloom', 'Main Character Tour', 'After Hours Run', 'Velvet Circuit', 'City Lights Set', 'Soft Launch Live', 'The Rush Hour'];
     const ROTATING_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Electronic'];
 
+    function getUniqueConcertImage(idx, genre = 'concert') {
+      return `https://source.unsplash.com/1000x700/?concert,stage,${encodeURIComponent(genre)}&sig=${idx}`;
+    }
+
+    function getUniqueMerchImage(idx, type = 'tour-merch') {
+      return `https://source.unsplash.com/300x300/?${encodeURIComponent(type)},tour,merch&sig=${idx}`;
+    }
+
     function formatRotatingDate(offset, hour = 8) {
       const date = new Date();
       date.setDate(date.getDate() + offset);
@@ -1279,7 +1269,8 @@
       const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
       const dateNum = date.getDate();
       const minute = offset % 3 === 0 ? '30' : '00';
-      return `${day}, ${month} ${dateNum} • ${hour}:${minute} PM`;
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      return { label: `${day}, ${month} ${dateNum} • ${hour}:${minute} PM`, key };
     }
 
     function generateRotatingConcerts(count = 500) {
@@ -1290,22 +1281,24 @@
         const genre = ROTATING_GENRES[idx % ROTATING_GENRES.length];
         const tour = ROTATING_TOURS[idx % ROTATING_TOURS.length];
         const basePrice = 45 + (idx % 28) * 8;
+        const rotatingDate = formatRotatingDate((idx % 96) + 1, 6 + (idx % 4));
         CONCERTS.push({
           id: `rotating-${idx}`,
           artist,
           tour,
           genre,
           venueId,
-          date: formatRotatingDate((idx % 96) + 1, 6 + (idx % 4)),
+          date: rotatingDate.label,
+          dateKey: rotatingDate.key,
           isLiveNow: false,
           isEnded: false,
           soldOut: false,
           priceFrom: basePrice,
-          image: EVENT_IMAGE_POOL[(idx + 7) % EVENT_IMAGE_POOL.length],
+          image: getUniqueConcertImage(idx + 100, genre),
           rotating: true,
           merch: [
-            { id: `rot-${idx}-tee`, name: `${artist} Tee`, price: 40 + (idx % 5) * 5, sizes: ['S', 'M', 'L', 'XL'], img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=300&auto=format&fit=crop' },
-            { id: `rot-${idx}-cap`, name: `${tour.split(' ')[0]} Cap`, price: 32 + (idx % 4) * 4, sizes: ['One size'], img: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=300&auto=format&fit=crop' }
+            { id: `rot-${idx}-tee`, name: `${artist} Tee`, price: 40 + (idx % 5) * 5, sizes: ['S', 'M', 'L', 'XL'], img: getUniqueMerchImage(idx, 'tee') },
+            { id: `rot-${idx}-cap`, name: `${tour.split(' ')[0]} Cap`, price: 32 + (idx % 4) * 4, sizes: ['One size'], img: getUniqueMerchImage(idx, 'cap') }
           ],
           playlist: [`${artist} - Arrival`, `${artist} - Live Favorite`, `${artist} - Finale`]
         });
@@ -1313,6 +1306,13 @@
     }
 
     generateRotatingConcerts(500);
+
+    CONCERTS.forEach((concert, idx) => {
+      concert.image = getUniqueConcertImage(idx, concert.genre);
+      concert.merch.forEach((item, itemIdx) => {
+        item.img = getUniqueMerchImage(idx * 10 + itemIdx, item.name);
+      });
+    });
 
     /* ==========================================================================
        2. APP STATE MANAGEMENT
@@ -1640,19 +1640,6 @@
           <span>${option.label}</span>${state.filters.location === option.value ? '<i class="fa-solid fa-check text-indigo-700"></i>' : ''}
         </button>
       `).join('');
-      const dateOptions = [
-        { value: 'ALL', label: 'Any date' },
-        { value: 'TODAY', label: 'Today / tomorrow' },
-        { value: 'NOV', label: 'November' },
-        { value: 'DEC', label: 'December' },
-        { value: 'JAN', label: 'January' },
-        { value: 'FEB', label: 'February' }
-      ];
-      document.getElementById('dateFilterMenu').innerHTML = dateOptions.map(option => `
-        <button onclick="selectFilterOption('date', '${option.value}', '${option.label}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-indigo-950 hover:bg-indigo-50 flex items-center justify-between">
-          <span>${option.label}</span>${state.filters.date === option.value ? '<i class="fa-solid fa-check text-indigo-700"></i>' : ''}
-        </button>
-      `).join('');
       const prices = CONCERTS.map(concert => concert.priceFrom);
       const min = Math.min(...prices);
       const max = Math.max(...prices);
@@ -1667,14 +1654,14 @@
       document.getElementById('priceMinFilter').value = state.filters.priceMin;
       document.getElementById('priceMaxFilter').value = state.filters.priceMax;
       document.getElementById('locationFilterButton').querySelector('span').innerText = state.filters.location === 'ALL' ? 'Location' : state.filters.location;
-      const dateLabels = { ALL: 'Any date', TODAY: 'Today / tomorrow', NOV: 'November', DEC: 'December', JAN: 'January', FEB: 'February' };
-      document.getElementById('dateFilterButton').querySelector('span').innerText = dateLabels[state.filters.date] || 'Any date';
+      const dateInput = document.getElementById('dateFilterInput');
+      if (dateInput) dateInput.value = state.filters.date === 'ALL' ? '' : state.filters.date;
       updatePriceRangeLabel();
     }
 
     function toggleFilterMenu(type) {
       const active = document.getElementById(`${type}FilterMenu`);
-      ['locationFilterMenu', 'dateFilterMenu'].forEach(id => {
+      ['locationFilterMenu'].forEach(id => {
         const menu = document.getElementById(id);
         if (menu && menu !== active) menu.classList.add('hidden');
       });
@@ -1682,8 +1669,8 @@
     }
 
     function handleFilterOutsideClick(event) {
-      if (event.target.closest('#locationFilterButton, #dateFilterButton, #locationFilterMenu, #dateFilterMenu')) return;
-      ['locationFilterMenu', 'dateFilterMenu'].forEach(id => {
+      if (event.target.closest('#locationFilterButton, #locationFilterMenu')) return;
+      ['locationFilterMenu'].forEach(id => {
         const menu = document.getElementById(id);
         if (menu) menu.classList.add('hidden');
       });
@@ -1694,6 +1681,11 @@
       document.getElementById(`${type}FilterButton`).querySelector('span').innerText = label;
       document.getElementById(`${type}FilterMenu`).classList.add('hidden');
       initFilters();
+      renderConcerts();
+    }
+
+    function handleDateFilter(value) {
+      state.filters.date = value || 'ALL';
       renderConcerts();
     }
 
@@ -1712,9 +1704,7 @@
       const matchesConcertFilters = c => {
         const venue = VENUES[c.venueId];
         const matchesLocation = state.filters.location === 'ALL' || venue.city === state.filters.location;
-        const matchesDate = state.filters.date === 'ALL' ||
-          (state.filters.date === 'TODAY' && (c.date.includes('TONIGHT') || c.date.includes('TOMORROW'))) ||
-          c.date.includes(state.filters.date);
+        const matchesDate = state.filters.date === 'ALL' || c.dateKey === state.filters.date;
         const matchesPrice = c.priceFrom >= state.filters.priceMin && c.priceFrom <= state.filters.priceMax;
         const matchesSearch = c.artist.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
                               c.tour.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
@@ -1725,17 +1715,6 @@
 
       const filtered = rotateConcertOrder(CONCERTS.filter(matchesConcertFilters));
       const displayConcerts = [...filtered];
-      if (displayConcerts.length < 5) {
-        const search = state.searchTerm.toLowerCase();
-        const fallback = rotateConcertOrder(CONCERTS.filter(c => {
-          if (displayConcerts.includes(c)) return false;
-          const venue = VENUES[c.venueId];
-          const matchesLocation = state.filters.location === 'ALL' || venue.city === state.filters.location;
-          const matchesSearch = !search || c.artist.toLowerCase().includes(search) || c.tour.toLowerCase().includes(search) || venue.name.toLowerCase().includes(search) || venue.city.toLowerCase().includes(search);
-          return matchesLocation && matchesSearch;
-        }));
-        displayConcerts.push(...fallback.slice(0, 5 - displayConcerts.length));
-      }
       const visibleConcerts = displayConcerts.slice(0, 150);
 
       document.getElementById('concertCount').innerText = visibleConcerts.length;
@@ -1832,7 +1811,7 @@
       const prices = CONCERTS.map(concert => concert.priceFrom);
       state.filters = { location: 'ALL', date: 'ALL', priceMin: Math.min(...prices), priceMax: Math.max(...prices) };
       document.getElementById('locationFilterButton').querySelector('span').innerText = 'Location';
-      document.getElementById('dateFilterButton').querySelector('span').innerText = 'Any date';
+      document.getElementById('dateFilterInput').value = '';
       document.getElementById('priceMinFilter').value = state.filters.priceMin;
       document.getElementById('priceMaxFilter').value = state.filters.priceMax;
       initFilters();
@@ -1965,7 +1944,20 @@
 
     function shortSectionName(section) {
       const label = section.name.replace(/\([^)]*\)/g, '').replace(/&/g, '+').trim();
-      return label.length > 22 ? `${label.slice(0, 20)}...` : label;
+      return label;
+    }
+
+    function sectionLabelSize(section, base = 9) {
+      const length = shortSectionName(section).length;
+      return Math.max(5.5, Math.min(base, 150 / Math.max(12, length)));
+    }
+
+    function straightSectionLabel(section, x, y, base = 9) {
+      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" font-size="${sectionLabelSize(section, base).toFixed(1)}">${shortSectionName(section)}</text>`;
+    }
+
+    function curvedSectionLabel(section, pathId, base = 8.5) {
+      return `<text class="section-label" font-size="${sectionLabelSize(section, base).toFixed(1)}"><textPath href="#${pathId}" startOffset="50%" text-anchor="middle">${shortSectionName(section)}</textPath></text>`;
     }
 
     function getSortedSectionsByPrice(venue) {
@@ -1985,9 +1977,9 @@
           <rect id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" x="95" y="118" width="110" height="24" rx="6" fill="${fill(front.id)}" opacity="0.86"/>
           <rect id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" x="68" y="78" width="164" height="26" rx="6" fill="${fill(middle.id)}" opacity="0.86"/>
           <rect id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" x="42" y="36" width="216" height="28" rx="6" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label" x="150" y="130" text-anchor="middle">${shortSectionName(front)}</text>
-          <text class="section-label" x="150" y="91" text-anchor="middle">${shortSectionName(middle)}</text>
-          <text class="section-label" x="150" y="50" text-anchor="middle">${shortSectionName(back)}</text>
+          ${straightSectionLabel(front, 150, 130)}
+          ${straightSectionLabel(middle, 150, 91)}
+          ${straightSectionLabel(back, 150, 50)}
         `,
         msg: `
           <defs>
@@ -1999,18 +1991,18 @@
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M84 133 C104 108 196 108 216 133 L199 149 C184 133 116 133 101 149 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M55 98 C84 58 216 58 245 98 L225 121 C204 92 96 92 75 121 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M28 58 C68 18 232 18 272 58 L252 86 C219 53 81 53 48 86 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label"><textPath href="#msg-front-label" startOffset="50%" text-anchor="middle">${shortSectionName(front)}</textPath></text>
-          <text class="section-label"><textPath href="#msg-middle-label" startOffset="50%" text-anchor="middle">${shortSectionName(middle)}</textPath></text>
-          <text class="section-label"><textPath href="#msg-back-label" startOffset="50%" text-anchor="middle">${shortSectionName(back)}</textPath></text>
+          ${curvedSectionLabel(front, 'msg-front-label')}
+          ${curvedSectionLabel(middle, 'msg-middle-label')}
+          ${curvedSectionLabel(back, 'msg-back-label')}
         `,
         redrocks: `
           ${stage}
           <polygon id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" points="91,122 209,112 224,136 77,148" fill="${fill(front.id)}" opacity="0.86"/>
           <polygon id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" points="63,82 237,67 257,96 45,116" fill="${fill(middle.id)}" opacity="0.86"/>
           <polygon id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" points="39,40 262,20 280,52 21,77" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label" x="150" y="130" text-anchor="middle">${shortSectionName(front)}</text>
-          <text class="section-label" x="150" y="91" text-anchor="middle">${shortSectionName(middle)}</text>
-          <text class="section-label" x="150" y="51" text-anchor="middle">${shortSectionName(back)}</text>
+          ${straightSectionLabel(front, 150, 130)}
+          ${straightSectionLabel(middle, 150, 91)}
+          ${straightSectionLabel(back, 150, 51)}
         `,
         o2: `
           <defs>
@@ -2022,9 +2014,9 @@
           <ellipse id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" cx="150" cy="128" rx="61" ry="18" fill="${fill(front.id)}" opacity="0.86"/>
           <ellipse id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" cx="150" cy="91" rx="94" ry="24" fill="${fill(middle.id)}" opacity="0.86"/>
           <ellipse id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" cx="150" cy="50" rx="124" ry="28" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label"><textPath href="#o2-front-label" startOffset="50%" text-anchor="middle">${shortSectionName(front)}</textPath></text>
-          <text class="section-label"><textPath href="#o2-middle-label" startOffset="50%" text-anchor="middle">${shortSectionName(middle)}</textPath></text>
-          <text class="section-label"><textPath href="#o2-back-label" startOffset="50%" text-anchor="middle">${shortSectionName(back)}</textPath></text>
+          ${curvedSectionLabel(front, 'o2-front-label')}
+          ${curvedSectionLabel(middle, 'o2-middle-label')}
+          ${curvedSectionLabel(back, 'o2-back-label')}
         `,
         hollywoodbowl: `
           <defs>
@@ -2036,12 +2028,12 @@
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M104 139 L196 139 L213 113 C184 101 116 101 87 113 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M66 105 C92 78 208 78 234 105 L215 126 C191 108 109 108 85 126 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M31 67 C70 27 230 27 269 67 L246 94 C211 63 89 63 54 94 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label"><textPath href="#hb-front-label" startOffset="50%" text-anchor="middle">${shortSectionName(front)}</textPath></text>
-          <text class="section-label"><textPath href="#hb-middle-label" startOffset="50%" text-anchor="middle">${shortSectionName(middle)}</textPath></text>
-          <text class="section-label"><textPath href="#hb-back-label" startOffset="50%" text-anchor="middle">${shortSectionName(back)}</textPath></text>
+          ${curvedSectionLabel(front, 'hb-front-label')}
+          ${curvedSectionLabel(middle, 'hb-middle-label')}
+          ${curvedSectionLabel(back, 'hb-back-label')}
         `
       };
-      const svgHtml = `<svg viewBox="0 0 300 200" class="w-full h-full">${layouts[venue.id] || layouts.sphere}</svg>`;
+      const svgHtml = `<svg viewBox="0 0 300 200" class="w-full h-full max-w-[620px]">${layouts[venue.id] || layouts.sphere}</svg>`;
 
       svgContainer.innerHTML = svgHtml;
       renderSectionLegend(venue);
@@ -2277,6 +2269,14 @@
       return 'none';
     }
 
+    function consumeCheckoutDeal() {
+      if (!state.discountPct && !state.discountFlat) return;
+      state.discountPct = 0;
+      state.discountFlat = 0;
+      state.activeDealLabel = '';
+      updateWalletUI();
+    }
+
     function ensureWalletCanCover(total) {
       if (state.walletBalance >= total) return true;
       const shortfall = Math.max(0, total - state.walletBalance);
@@ -2395,6 +2395,7 @@
       launchConfetti();
       persistTickets();
       updateTicketBadge();
+      consumeCheckoutDeal();
       updateWalletUI();
 
       showToast(existingTicket ? 'Tickets merged into your existing concert pass.' : `Success! ${newTicket.qty} ticket(s) added to your wallet.`, 'success');
@@ -2472,7 +2473,7 @@
                 </button>
               </div>
             ` : `
-              <div class="flex items-center gap-3">
+              <div class="flex flex-col items-start gap-1">
                 <span class="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg">
                   <i class="fa-solid fa-lock mr-1 text-zinc-600"></i> Doors open ${concert.date}
                 </span>
@@ -2565,7 +2566,7 @@
       `).join('') : `<div class="text-sm text-indigo-100 bg-white/10 border border-white/15 rounded-xl p-4">Your first show belongs here.</div>`;
       merch.innerHTML = state.profileHistory.merch.length ? state.profileHistory.merch.map(item => `
         <div class="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3">
-          <img src="${item.img || EVENT_IMAGE_POOL[0]}" alt="${item.name}" class="w-12 h-12 rounded-lg object-cover border border-white/10 bg-zinc-800">
+          <img src="${item.img || EVENT_IMAGE_POOL[0]}" alt="${item.name}" onerror="this.onerror=null;this.src='${EVENT_IMAGE_POOL[0]}'" class="w-12 h-12 rounded-lg object-cover border border-white/10 bg-zinc-800">
           <div class="flex-1 min-w-0">
             <div class="font-bold text-white">${item.name}${item.qty > 1 ? ` <span class="text-zinc-400 text-xs">x${item.qty}</span>` : ''}</div>
             <div class="text-xs text-zinc-400">${item.concert} • ${item.size || 'Size'} / ${item.color || 'Color'}</div>
@@ -2767,8 +2768,8 @@
       document.getElementById('merchShopView').classList.remove('hidden');
       document.getElementById('merchCheckoutView').classList.add('hidden');
       document.getElementById('merchShopStatus').innerHTML = state.merchPreviewOnly
-        ? `<i class="fa-solid fa-eye mr-1 text-emerald-400"></i> Merch preview unlocked. Purchasing is available inside the live stage.`
-        : `<i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> Booth unlocked. Select merch, then checkout.`;
+        ? `<i class="fa-solid fa-eye mr-1 text-emerald-400"></i> Preview`
+        : `<i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> Pick merch`;
       document.getElementById('merchCheckoutButton').innerHTML = state.merchPreviewOnly
         ? `<i class="fa-solid fa-xmark"></i> Close Preview`
         : `<i class="fa-solid fa-bag-shopping"></i> Checkout`;
@@ -2938,7 +2939,7 @@
 
         row.innerHTML = `
           <div class="flex items-center space-x-3 min-w-0">
-            <img src="${item.img}" alt="${item.name}" class="w-12 h-12 rounded-lg object-cover bg-zinc-800">
+            <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='${EVENT_IMAGE_POOL[0]}'" class="w-12 h-12 rounded-lg object-cover bg-zinc-800">
             <div class="min-w-0">
               <div class="text-xs font-bold text-white">${item.name}${qty > 1 ? ` <span class="text-zinc-400">x${qty}</span>` : ''}</div>
               <div class="text-xs text-emerald-400 font-semibold">$${item.price}${state.merchPreviewOnly ? '' : ` <span class="ml-1 text-amber-300">Only ${stock} left</span>`}</div>
@@ -3079,7 +3080,6 @@
       const payment = calculateMerchPayment();
       if (!ensureWalletCanCover(payment.finalTotal)) return;
       state.walletBalance = Math.max(0, state.walletBalance - payment.finalTotal);
-      updateWalletUI();
       recordMerchHistory(purchasedItems, state.activeMerchConcert);
       purchasedItems.forEach(item => {
         const stockKey = `${state.activeMerchConcert.id}-${item.id}`;
@@ -3088,6 +3088,8 @@
       closeMerchModal();
       state.merchCart = {};
       persistActiveMerchCart();
+      consumeCheckoutDeal();
+      updateWalletUI();
       launchConfetti();
       playWinSound();
       showToast(`Merch acquired.`, 'success');
@@ -3351,7 +3353,7 @@
         const angle = idx * 45 + 22.5;
         const label = document.createElement('span');
         label.className = 'wheel-label';
-        label.style.transform = `rotate(${angle}deg) translateY(-112px) rotate(-${angle}deg)`;
+        label.style.transform = `rotate(${angle}deg) translateY(-112px)`;
         label.innerText = deal.label.toUpperCase();
         wheel.insertBefore(label, wheel.firstElementChild);
       });
@@ -3373,10 +3375,12 @@
     function renderWheelLockState() {
       const wheel = document.getElementById('discountWheel');
       const overlay = document.getElementById('wheelLockedOverlay');
+      const pointer = document.getElementById('wheelPointer');
       const countdown = document.getElementById('wheelCountdownText');
       if (!wheel || !overlay) return;
       const used = state.lastSpinDate === todayKey();
-      wheel.classList.toggle('wheel-locked', used);
+      wheel.classList.toggle('hidden', used);
+      if (pointer) pointer.classList.toggle('hidden', used);
       overlay.classList.toggle('hidden', !used);
       if (used && countdown) countdown.innerText = `Resets in ${getNextSpinCountdown()}`;
     }
