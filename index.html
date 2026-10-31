@@ -100,6 +100,9 @@
       font-weight: 800;
       pointer-events: none;
       dominant-baseline: middle;
+      paint-order: stroke;
+      stroke: rgba(255,255,255,0.7);
+      stroke-width: 2px;
     }
     .wheel-spin {
       transition: transform 4s cubic-bezier(0.08, 0.72, 0.05, 1);
@@ -534,7 +537,7 @@
         <div class="flex flex-col space-y-4 h-auto lg:h-[560px]">
           <div class="bg-white border border-zinc-200 rounded-lg p-5 space-y-4 shadow-sm flex flex-col flex-1 min-h-0">
             <label class="text-sm font-semibold text-zinc-500 uppercase tracking-wider block">Choose Seating Section</label>
-            <div id="sectionList" class="space-y-3 overflow-y-auto pr-1 flex-1 min-h-0">
+            <div id="sectionList" class="space-y-2 flex-1 min-h-0">
               <!-- Tier Options inserted via JS -->
             </div>
           </div>
@@ -1733,15 +1736,19 @@
     function handleDateFilter(which, value) {
       if (which === 'start') state.filters.dateStart = value || '';
       if (which === 'end') state.filters.dateEnd = value || '';
-      if (state.filters.dateStart && state.filters.dateEnd && state.filters.dateStart > state.filters.dateEnd) {
-        if (which === 'start') state.filters.dateEnd = state.filters.dateStart;
-        else state.filters.dateStart = state.filters.dateEnd;
-      }
       const dateStartInput = document.getElementById('dateStartFilter');
       const dateEndInput = document.getElementById('dateEndFilter');
       if (dateStartInput) dateStartInput.value = state.filters.dateStart;
       if (dateEndInput) dateEndInput.value = state.filters.dateEnd;
       renderConcerts();
+    }
+
+    function matchesDateRange(dateKey) {
+      if (!dateKey) return false;
+      const dates = [state.filters.dateStart, state.filters.dateEnd].filter(Boolean).sort();
+      if (!dates.length) return true;
+      const [start, end = start] = dates;
+      return dateKey >= start && dateKey <= end;
     }
 
     function rotateConcertOrder(list) {
@@ -1759,8 +1766,7 @@
       const matchesConcertFilters = c => {
         const venue = VENUES[c.venueId];
         const matchesLocation = state.filters.location === 'ALL' || venue.city === state.filters.location;
-        const dateKey = c.dateKey || '';
-        const matchesDate = (!state.filters.dateStart || dateKey >= state.filters.dateStart) && (!state.filters.dateEnd || dateKey <= state.filters.dateEnd);
+        const matchesDate = matchesDateRange(c.dateKey);
         const matchesPrice = c.priceFrom >= state.filters.priceMin && c.priceFrom <= state.filters.priceMax;
         const matchesSearch = c.artist.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
                               c.tour.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
@@ -2006,15 +2012,15 @@
 
     function sectionLabelSize(section, base = 9) {
       const length = shortSectionName(section).length;
-      return Math.max(5.5, Math.min(base, 150 / Math.max(12, length)));
+      return Math.max(5.2, Math.min(base, 130 / Math.max(12, length)));
     }
 
     function straightSectionLabel(section, x, y, base = 9) {
-      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" font-size="${sectionLabelSize(section, base).toFixed(1)}">${shortSectionName(section)}</text>`;
+      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${sectionLabelSize(section, base).toFixed(1)}">${shortSectionName(section)}</text>`;
     }
 
     function curvedSectionLabel(section, pathId, base = 8.5) {
-      return `<text class="section-label" font-size="${sectionLabelSize(section, base).toFixed(1)}"><textPath href="#${pathId}" startOffset="50%" text-anchor="middle">${shortSectionName(section)}</textPath></text>`;
+      return `<text class="section-label" dy="3" font-size="${sectionLabelSize(section, base).toFixed(1)}"><textPath href="#${pathId}" startOffset="50%" text-anchor="middle">${shortSectionName(section)}</textPath></text>`;
     }
 
     function getSortedSectionsByPrice(venue) {
@@ -2040,9 +2046,9 @@
         `,
         msg: `
           <defs>
-            <path id="msg-front-label" d="M96 135 C118 123 182 123 204 135"/>
-            <path id="msg-middle-label" d="M72 96 C104 72 196 72 228 96"/>
-            <path id="msg-back-label" d="M47 59 C90 30 210 30 253 59"/>
+            <path id="msg-front-label" d="M101 135 C118 126 182 126 199 135"/>
+            <path id="msg-middle-label" d="M77 98 C104 80 196 80 223 98"/>
+            <path id="msg-back-label" d="M51 61 C91 38 209 38 249 61"/>
           </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M84 133 C104 108 196 108 216 133 L199 149 C184 133 116 133 101 149 Z" fill="${fill(front.id)}" opacity="0.86"/>
@@ -2063,9 +2069,9 @@
         `,
         o2: `
           <defs>
-            <path id="o2-front-label" d="M92 128 C112 114 188 114 208 128"/>
-            <path id="o2-middle-label" d="M58 91 C92 70 208 70 242 91"/>
-            <path id="o2-back-label" d="M28 50 C72 24 228 24 272 50"/>
+            <path id="o2-front-label" d="M96 128 C116 119 184 119 204 128"/>
+            <path id="o2-middle-label" d="M61 91 C95 76 205 76 239 91"/>
+            <path id="o2-back-label" d="M33 50 C76 31 224 31 267 50"/>
           </defs>
           ${stage}
           <ellipse id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" cx="150" cy="128" rx="61" ry="18" fill="${fill(front.id)}" opacity="0.86"/>
@@ -2077,9 +2083,9 @@
         `,
         hollywoodbowl: `
           <defs>
-            <path id="hb-front-label" d="M100 125 C124 111 176 111 200 125"/>
-            <path id="hb-middle-label" d="M78 99 C107 80 193 80 222 99"/>
-            <path id="hb-back-label" d="M52 63 C91 35 209 35 248 63"/>
+            <path id="hb-front-label" d="M105 127 C126 116 174 116 195 127"/>
+            <path id="hb-middle-label" d="M83 102 C110 87 190 87 217 102"/>
+            <path id="hb-back-label" d="M57 66 C94 42 206 42 243 66"/>
           </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M104 139 L196 139 L213 113 C184 101 116 101 87 113 Z" fill="${fill(front.id)}" opacity="0.86"/>
@@ -2115,7 +2121,7 @@
         const item = document.createElement('div');
         const isSelected = state.selectedSection.id === sec.id;
         const isSoldOut = sec.seatsAvailable < 1;
-        item.className = `p-4 rounded-xl border transition-all cursor-pointer grid grid-cols-[5rem_1fr_5rem] items-center gap-4 ${
+        item.className = `p-2.5 rounded-xl border transition-all cursor-pointer grid grid-cols-[4rem_1fr_4.5rem] items-center gap-3 ${
           isSelected 
             ? 'bg-indigo-50 border-indigo-500 text-zinc-950'
             : isSoldOut ? 'bg-zinc-50 border-zinc-200 text-zinc-400 opacity-60' : 'bg-white border-zinc-200 text-zinc-600 hover:border-indigo-300'
@@ -2123,14 +2129,14 @@
         item.onclick = () => isSoldOut ? showToast('That section is sold out.', 'info') : selectSection(sec);
 
         item.innerHTML = `
-          <img src="${getSeatViewImage(venue, sec.id)}" alt="View from ${sec.name}" class="w-20 h-14 rounded-lg object-cover border border-zinc-200 shrink-0">
-          <div class="text-center px-2">
-            <div class="text-base font-bold text-zinc-950 leading-tight">${sec.name}</div>
-            <div class="text-sm text-zinc-500 mt-1">${isSoldOut ? 'Sold out' : `${sec.seatsAvailable} passes available`}</div>
+          <img src="${getSeatViewImage(venue, sec.id)}" alt="View from ${sec.name}" class="w-16 h-12 rounded-lg object-cover border border-zinc-200 shrink-0">
+          <div class="text-center px-1">
+            <div class="text-sm font-bold text-zinc-950 leading-tight">${sec.name}</div>
+            <div class="text-xs text-zinc-500 mt-0.5">${isSoldOut ? 'Sold out' : `${sec.seatsAvailable} passes available`}</div>
           </div>
           <div class="text-right">
-            <div class="text-xl font-extrabold text-indigo-700">$${sec.price}</div>
-            <div class="text-xs text-zinc-500">per pass</div>
+            <div class="text-lg font-extrabold text-indigo-700">$${sec.price}</div>
+            <div class="text-[11px] text-zinc-500">per pass</div>
           </div>
         `;
         list.appendChild(item);
