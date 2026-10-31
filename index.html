@@ -175,6 +175,24 @@
     .toast-animate {
       animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+    #page-account {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(16, 185, 129, 0.22), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(79, 70, 229, 0.24), transparent 26%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.03) 25%, transparent 25%) 0 0 / 22px 22px;
+      border-radius: 24px;
+    }
+    #page-account::before {
+      content: "";
+      position: absolute;
+      inset: 8% -8% auto -8%;
+      height: 42%;
+      background: repeating-linear-gradient(115deg, rgba(79,70,229,0.08) 0 2px, transparent 2px 18px);
+      transform: rotate(-2deg);
+      pointer-events: none;
+    }
     .account-input-error {
       border-color: #ef4444 !important;
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
@@ -239,6 +257,20 @@
       border: 3px solid #4f46e5;
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
       cursor: grab;
+    }
+    .merch-select {
+      appearance: none;
+      background-color: #09090b;
+      background-image: linear-gradient(45deg, transparent 50%, #34d399 50%), linear-gradient(135deg, #34d399 50%, transparent 50%);
+      background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+    .wheel-locked {
+      filter: grayscale(0.65) brightness(0.58);
+    }
+    .wheel-win-pop {
+      animation: toastSlide 0.2s ease-out forwards;
     }
   </style>
 </head>
@@ -312,16 +344,20 @@
             <div class="grid grid-cols-3 gap-2">
               <div class="rounded-2xl border border-white/15 bg-white/10 p-3 text-white">
                 <div class="text-lg font-black"><i class="fa-solid fa-ticket"></i></div>
+                <div class="text-[10px] text-indigo-100">Passes</div>
               </div>
               <div class="rounded-2xl border border-white/15 bg-white/10 p-3 text-white">
                 <div class="text-lg font-black"><i class="fa-solid fa-bag-shopping"></i></div>
+                <div class="text-[10px] text-indigo-100">Merch</div>
               </div>
               <div class="rounded-2xl border border-white/15 bg-white/10 p-3 text-white">
                 <div class="text-lg font-black"><i class="fa-solid fa-user-shield"></i></div>
+                <div class="text-[10px] text-indigo-100">Deals</div>
               </div>
             </div>
           </div>
         <div id="accountChoiceView" class="space-y-3">
+          <div class="text-[11px] font-black uppercase tracking-wider text-emerald-200">Member access</div>
           <button onclick="showAccountForm('signup')" class="w-full bg-emerald-400 hover:bg-emerald-300 text-zinc-950 rounded-2xl py-3.5 text-sm font-black shadow-lg shadow-emerald-500/20">
             Create account
           </button>
@@ -329,8 +365,8 @@
             Log in
           </button>
           <div class="pt-2 border-t border-white/10">
+            <div class="text-[11px] font-black uppercase tracking-wider text-indigo-100 mb-2">Guest access</div>
             <button onclick="skipAccount()" class="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white rounded-2xl py-3.5 text-sm font-black">Skip to DopamineLive</button>
-            <p class="text-[11px] text-indigo-100 mt-2 text-center">Guest mode stays on this device.</p>
           </div>
         </div>
         <div id="accountFormView" class="hidden">
@@ -733,23 +769,6 @@
           <span id="merchTimerText" class="hidden font-black text-amber-300">00:20</span>
         </div>
 
-        <div id="merchOptionsPanel" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label class="block">
-            <span class="text-xs font-bold text-zinc-400">Size</span>
-            <select id="merchPreSizeSelect" class="mt-1 w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-              <option value="">Select size</option>
-              <option>S</option><option>M</option><option>L</option><option>XL</option>
-            </select>
-          </label>
-          <label class="block">
-            <span class="text-xs font-bold text-zinc-400">Color</span>
-            <select id="merchPreColorSelect" class="mt-1 w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-              <option value="">Select color</option>
-              <option>Black</option><option>Cream</option><option>Tour green</option><option>Washed violet</option>
-            </select>
-          </label>
-        </div>
-
         <!-- Merch Items Scrollable Grid -->
         <div id="merchItemsList" class="space-y-3 max-h-72 overflow-y-auto pr-1">
           <!-- Merch items dynamic HTML -->
@@ -836,9 +855,15 @@
             <button onclick="spinDiscountWheel()" class="relative w-72 h-72 rounded-full border-4 border-white wheel-face wheel-spin flex items-center justify-center text-white text-lg font-black overflow-hidden" id="discountWheel">
               <span class="relative z-10 bg-zinc-950/95 border border-white/30 rounded-full w-20 h-20 flex items-center justify-center shadow-xl">SPIN</span>
             </button>
+            <div id="wheelLockedOverlay" class="hidden absolute inset-0 rounded-full bg-zinc-950/72 border-4 border-white/20 z-30 flex flex-col items-center justify-center text-center px-8 text-white">
+              <i class="fa-solid fa-lock text-3xl mb-2 text-emerald-300"></i>
+              <div class="text-sm font-black">One spin per day</div>
+              <div id="wheelCountdownText" class="text-xs text-zinc-300 mt-1">Resets soon</div>
+            </div>
+            <div id="wheelWinPopup" class="hidden wheel-win-pop absolute -bottom-8 left-1/2 -translate-x-1/2 z-40 bg-emerald-400 text-zinc-950 rounded-xl px-4 py-2 text-xs font-black shadow-2xl whitespace-nowrap"></div>
           </div>
         </div>
-        <div id="discountText" class="text-center text-xl font-bold text-white">No discount active</div>
+        <div id="discountText" class="text-center text-xl font-bold text-white"></div>
       </div>
     </div>
   </div>
@@ -857,9 +882,37 @@
       <div class="flex items-center space-x-4 text-zinc-400">
         <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Verified Seats</span>
         <span><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Instant Stage Doors</span>
+        <button onclick="openAboutModal()" class="hover:text-white font-semibold">About</button>
       </div>
     </div>
   </footer>
+
+  <div id="aboutModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-zinc-200 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-zinc-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-black text-zinc-950">About DopamineLive</h3>
+          <p class="text-sm text-zinc-500">A simulated live-ticket and merch marketplace.</p>
+        </div>
+        <button onclick="closeAboutModal()" class="w-9 h-9 rounded-lg bg-zinc-100 text-zinc-600 hover:text-zinc-950 grid place-items-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-6 grid gap-4 text-sm text-zinc-600">
+        <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4">
+          <div class="font-black text-zinc-950 mb-1">What it does</div>
+          DopamineLive lets you browse rotating concert inventory, choose simulated seats, collect virtual passes, and unlock artist merch queues.
+        </div>
+        <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+          <div class="font-black text-indigo-950 mb-1">Why it feels intense</div>
+          The app uses time limits, changing inventory, rewards, and progress feedback to model how high-demand ticket drops can feel.
+        </div>
+        <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-4 font-bold text-emerald-900">
+          No real money is spent. Wallets, purchases, tickets, discounts, and merch are all simulated for this demo.
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- CORE APPLICATION SCRIPT -->
   <script>
@@ -1208,6 +1261,59 @@
       });
     });
 
+    const ROTATING_ARTIST_PREFIXES = [
+      'Neon', 'Velvet', 'Midnight', 'Golden', 'Electric', 'Crystal', 'Nova', 'Static', 'Royal', 'Future',
+      'Silver', 'Echo', 'Starlight', 'Analog', 'Lunar', 'Prism', 'Afterglow', 'Cosmic', 'Sonic', 'Horizon'
+    ];
+    const ROTATING_ARTIST_SUFFIXES = [
+      'Hearts', 'District', 'Pulse', 'Theory', 'Club', 'Choir', 'Signals', 'Garden', 'Motion', 'Dreams',
+      'Wave', 'Parade', 'Room', 'Saints', 'Bloom', 'Arcade', 'Frequency', 'Weather', 'Cinema', 'Rush'
+    ];
+    const ROTATING_TOURS = ['Night Market Live', 'Signal Bloom', 'Main Character Tour', 'After Hours Run', 'Velvet Circuit', 'City Lights Set', 'Soft Launch Live', 'The Rush Hour'];
+    const ROTATING_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Electronic'];
+
+    function formatRotatingDate(offset, hour = 8) {
+      const date = new Date();
+      date.setDate(date.getDate() + offset);
+      const day = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      const dateNum = date.getDate();
+      const minute = offset % 3 === 0 ? '30' : '00';
+      return `${day}, ${month} ${dateNum} • ${hour}:${minute} PM`;
+    }
+
+    function generateRotatingConcerts(count = 500) {
+      const venueIds = Object.keys(VENUES);
+      for (let idx = 0; idx < count; idx++) {
+        const artist = `${ROTATING_ARTIST_PREFIXES[idx % ROTATING_ARTIST_PREFIXES.length]} ${ROTATING_ARTIST_SUFFIXES[Math.floor(idx / ROTATING_ARTIST_PREFIXES.length) % ROTATING_ARTIST_SUFFIXES.length]} ${idx + 1}`;
+        const venueId = venueIds[idx % venueIds.length];
+        const genre = ROTATING_GENRES[idx % ROTATING_GENRES.length];
+        const tour = ROTATING_TOURS[idx % ROTATING_TOURS.length];
+        const basePrice = 45 + (idx % 28) * 8;
+        CONCERTS.push({
+          id: `rotating-${idx}`,
+          artist,
+          tour,
+          genre,
+          venueId,
+          date: formatRotatingDate((idx % 96) + 1, 6 + (idx % 4)),
+          isLiveNow: false,
+          isEnded: false,
+          soldOut: false,
+          priceFrom: basePrice,
+          image: EVENT_IMAGE_POOL[(idx + 7) % EVENT_IMAGE_POOL.length],
+          rotating: true,
+          merch: [
+            { id: `rot-${idx}-tee`, name: `${artist} Tee`, price: 40 + (idx % 5) * 5, sizes: ['S', 'M', 'L', 'XL'], img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=300&auto=format&fit=crop' },
+            { id: `rot-${idx}-cap`, name: `${tour.split(' ')[0]} Cap`, price: 32 + (idx % 4) * 4, sizes: ['One size'], img: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=300&auto=format&fit=crop' }
+          ],
+          playlist: [`${artist} - Arrival`, `${artist} - Live Favorite`, `${artist} - Finale`]
+        });
+      }
+    }
+
+    generateRotatingConcerts(500);
+
     /* ==========================================================================
        2. APP STATE MANAGEMENT
        ========================================================================== */
@@ -1253,6 +1359,7 @@
 
     const state = {
       activeTab: 'discover',
+      navReady: false,
       searchTerm: '',
       filters: { location: 'ALL', date: 'ALL', priceMin: 0, priceMax: 0 },
       accountMode: 'signup',
@@ -1299,6 +1406,7 @@
       activeDealLabel: localStorage.getItem('dopamineDealLabel') === '10% off checkout' ? '' : (localStorage.getItem('dopamineDealLabel') || ''),
       wheelRotation: 0,
       wheelDeals: [],
+      wheelCountdownTimer: null,
       siteSeconds: 0,
       walletRewardTimer: null,
       spendPopupInitialTimer: null,
@@ -1334,13 +1442,21 @@
       initStageVisualizer();
       updateAccountUI();
       document.addEventListener('click', handleFilterOutsideClick);
+      window.addEventListener('popstate', handleBrowserNavigation);
+      document.addEventListener('keydown', handleNavigationShortcuts);
       if (state.account) startEngagementSystems();
-      navigateTo(state.account ? 'discover' : 'account');
+      navigateTo(state.account ? 'discover' : 'account', { replaceHistory: true });
     };
 
-    function navigateTo(tabName) {
+    function navigateTo(tabName, options = {}) {
       if (!state.account && tabName !== 'account') tabName = 'account';
+      const previousTab = state.activeTab;
       state.activeTab = tabName;
+      if (!options.skipHistory && (options.replaceHistory || previousTab !== tabName || !state.navReady)) {
+        const method = options.replaceHistory || !state.navReady ? 'replaceState' : 'pushState';
+        history[method]({ tabName }, '', `#${tabName}`);
+        state.navReady = true;
+      }
       document.getElementById('siteHeader').classList.toggle('hidden', tabName === 'account');
       const footer = document.getElementById('siteFooter');
       if (footer) footer.classList.toggle('hidden', tabName === 'account');
@@ -1386,6 +1502,22 @@
       } else if (tabName === 'stage') {
         document.getElementById('page-stage').classList.remove('hidden');
         requestAnimationFrame(resizeStageCanvas);
+      }
+    }
+
+    function handleBrowserNavigation(event) {
+      const tabName = event.state && event.state.tabName ? event.state.tabName : 'discover';
+      navigateTo(tabName, { skipHistory: true });
+    }
+
+    function handleNavigationShortcuts(event) {
+      if (!event.metaKey || event.shiftKey || event.altKey || event.ctrlKey) return;
+      if (event.key === '[') {
+        event.preventDefault();
+        history.back();
+      } else if (event.key === ']') {
+        event.preventDefault();
+        history.forward();
       }
     }
 
@@ -1565,11 +1697,19 @@
       renderConcerts();
     }
 
+    function rotateConcertOrder(list) {
+      return [...list].sort((a, b) => {
+        const aRand = seededRandom(`${todayKey()}-${a.id}`)();
+        const bRand = seededRandom(`${todayKey()}-${b.id}`)();
+        return aRand - bRand;
+      });
+    }
+
     function renderConcerts() {
       const grid = document.getElementById('concertGrid');
       grid.innerHTML = '';
 
-      const filtered = CONCERTS.filter(c => {
+      const matchesConcertFilters = c => {
         const venue = VENUES[c.venueId];
         const matchesLocation = state.filters.location === 'ALL' || venue.city === state.filters.location;
         const matchesDate = state.filters.date === 'ALL' ||
@@ -1581,11 +1721,26 @@
                               venue.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
                               venue.city.toLowerCase().includes(state.searchTerm.toLowerCase());
         return matchesLocation && matchesDate && matchesPrice && matchesSearch;
-      });
+      };
 
-      document.getElementById('concertCount').innerText = filtered.length;
+      const filtered = rotateConcertOrder(CONCERTS.filter(matchesConcertFilters));
+      const displayConcerts = [...filtered];
+      if (displayConcerts.length < 5) {
+        const search = state.searchTerm.toLowerCase();
+        const fallback = rotateConcertOrder(CONCERTS.filter(c => {
+          if (displayConcerts.includes(c)) return false;
+          const venue = VENUES[c.venueId];
+          const matchesLocation = state.filters.location === 'ALL' || venue.city === state.filters.location;
+          const matchesSearch = !search || c.artist.toLowerCase().includes(search) || c.tour.toLowerCase().includes(search) || venue.name.toLowerCase().includes(search) || venue.city.toLowerCase().includes(search);
+          return matchesLocation && matchesSearch;
+        }));
+        displayConcerts.push(...fallback.slice(0, 5 - displayConcerts.length));
+      }
+      const visibleConcerts = displayConcerts.slice(0, 150);
 
-      filtered.forEach(concert => {
+      document.getElementById('concertCount').innerText = visibleConcerts.length;
+
+      visibleConcerts.forEach(concert => {
         const venue = VENUES[concert.venueId];
         const card = document.createElement('div');
         card.className = 'concert-card bg-white border border-zinc-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-sm';
@@ -1809,7 +1964,8 @@
     }
 
     function shortSectionName(section) {
-      return section.name.replace(/\([^)]*\)/g, '').trim();
+      const label = section.name.replace(/\([^)]*\)/g, '').replace(/&/g, '+').trim();
+      return label.length > 22 ? `${label.slice(0, 20)}...` : label;
     }
 
     function getSortedSectionsByPrice(venue) {
@@ -1834,13 +1990,18 @@
           <text class="section-label" x="150" y="50" text-anchor="middle">${shortSectionName(back)}</text>
         `,
         msg: `
+          <defs>
+            <path id="msg-front-label" d="M96 135 C118 123 182 123 204 135"/>
+            <path id="msg-middle-label" d="M72 96 C104 72 196 72 228 96"/>
+            <path id="msg-back-label" d="M47 59 C90 30 210 30 253 59"/>
+          </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M84 133 C104 108 196 108 216 133 L199 149 C184 133 116 133 101 149 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M55 98 C84 58 216 58 245 98 L225 121 C204 92 96 92 75 121 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M28 58 C68 18 232 18 272 58 L252 86 C219 53 81 53 48 86 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label" x="150" y="135" text-anchor="middle">${shortSectionName(front)}</text>
-          <text class="section-label" x="150" y="89" text-anchor="middle">${shortSectionName(middle)}</text>
-          <text class="section-label" x="150" y="51" text-anchor="middle">${shortSectionName(back)}</text>
+          <text class="section-label"><textPath href="#msg-front-label" startOffset="50%" text-anchor="middle">${shortSectionName(front)}</textPath></text>
+          <text class="section-label"><textPath href="#msg-middle-label" startOffset="50%" text-anchor="middle">${shortSectionName(middle)}</textPath></text>
+          <text class="section-label"><textPath href="#msg-back-label" startOffset="50%" text-anchor="middle">${shortSectionName(back)}</textPath></text>
         `,
         redrocks: `
           ${stage}
@@ -1852,22 +2013,32 @@
           <text class="section-label" x="150" y="51" text-anchor="middle">${shortSectionName(back)}</text>
         `,
         o2: `
+          <defs>
+            <path id="o2-front-label" d="M92 128 C112 114 188 114 208 128"/>
+            <path id="o2-middle-label" d="M58 91 C92 70 208 70 242 91"/>
+            <path id="o2-back-label" d="M28 50 C72 24 228 24 272 50"/>
+          </defs>
           ${stage}
           <ellipse id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" cx="150" cy="128" rx="61" ry="18" fill="${fill(front.id)}" opacity="0.86"/>
           <ellipse id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" cx="150" cy="91" rx="94" ry="24" fill="${fill(middle.id)}" opacity="0.86"/>
           <ellipse id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" cx="150" cy="50" rx="124" ry="28" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label" x="150" y="128" text-anchor="middle">${shortSectionName(front)}</text>
-          <text class="section-label" x="150" y="91" text-anchor="middle">${shortSectionName(middle)}</text>
-          <text class="section-label" x="150" y="50" text-anchor="middle">${shortSectionName(back)}</text>
+          <text class="section-label"><textPath href="#o2-front-label" startOffset="50%" text-anchor="middle">${shortSectionName(front)}</textPath></text>
+          <text class="section-label"><textPath href="#o2-middle-label" startOffset="50%" text-anchor="middle">${shortSectionName(middle)}</textPath></text>
+          <text class="section-label"><textPath href="#o2-back-label" startOffset="50%" text-anchor="middle">${shortSectionName(back)}</textPath></text>
         `,
         hollywoodbowl: `
+          <defs>
+            <path id="hb-front-label" d="M100 125 C124 111 176 111 200 125"/>
+            <path id="hb-middle-label" d="M78 99 C107 80 193 80 222 99"/>
+            <path id="hb-back-label" d="M52 63 C91 35 209 35 248 63"/>
+          </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M104 139 L196 139 L213 113 C184 101 116 101 87 113 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M66 105 C92 78 208 78 234 105 L215 126 C191 108 109 108 85 126 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M31 67 C70 27 230 27 269 67 L246 94 C211 63 89 63 54 94 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          <text class="section-label" x="150" y="125" text-anchor="middle">${shortSectionName(front)}</text>
-          <text class="section-label" x="150" y="98" text-anchor="middle">${shortSectionName(middle)}</text>
-          <text class="section-label" x="150" y="62" text-anchor="middle">${shortSectionName(back)}</text>
+          <text class="section-label"><textPath href="#hb-front-label" startOffset="50%" text-anchor="middle">${shortSectionName(front)}</textPath></text>
+          <text class="section-label"><textPath href="#hb-middle-label" startOffset="50%" text-anchor="middle">${shortSectionName(middle)}</textPath></text>
+          <text class="section-label"><textPath href="#hb-back-label" startOffset="50%" text-anchor="middle">${shortSectionName(back)}</textPath></text>
         `
       };
       const svgHtml = `<svg viewBox="0 0 300 200" class="w-full h-full">${layouts[venue.id] || layouts.sphere}</svg>`;
@@ -2373,6 +2544,7 @@
           total: entry.price * entry.qty,
           size: entry.size,
           color: entry.color,
+          img: entry.img,
           concert: concert.artist
         });
       });
@@ -2392,8 +2564,9 @@
         </div>
       `).join('') : `<div class="text-sm text-indigo-100 bg-white/10 border border-white/15 rounded-xl p-4">Your first show belongs here.</div>`;
       merch.innerHTML = state.profileHistory.merch.length ? state.profileHistory.merch.map(item => `
-        <div class="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between">
-          <div>
+        <div class="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3">
+          <img src="${item.img || EVENT_IMAGE_POOL[0]}" alt="${item.name}" class="w-12 h-12 rounded-lg object-cover border border-white/10 bg-zinc-800">
+          <div class="flex-1 min-w-0">
             <div class="font-bold text-white">${item.name}${item.qty > 1 ? ` <span class="text-zinc-400 text-xs">x${item.qty}</span>` : ''}</div>
             <div class="text-xs text-zinc-400">${item.concert} • ${item.size || 'Size'} / ${item.color || 'Color'}</div>
           </div>
@@ -2600,11 +2773,6 @@
         ? `<i class="fa-solid fa-xmark"></i> Close Preview`
         : `<i class="fa-solid fa-bag-shopping"></i> Checkout`;
       document.getElementById('merchTotalPanel').classList.toggle('hidden', state.merchPreviewOnly);
-      document.getElementById('merchOptionsPanel').classList.toggle('hidden', state.merchPreviewOnly);
-      const preSize = document.getElementById('merchPreSizeSelect');
-      const preColor = document.getElementById('merchPreColorSelect');
-      if (preSize) preSize.value = state.merchOptions.size || '';
-      if (preColor) preColor.value = state.merchOptions.color || '';
 
       state.merchCart = { ...(state.merchCarts[state.activeMerchConcert.id] || {}) };
       normalizeMerchCart();
@@ -2708,9 +2876,11 @@
         .reduce((sum, entry) => sum + entry.qty, 0);
     }
 
-    function getSelectedMerchOptions(requireSelection = false) {
-      const size = document.getElementById('merchPreSizeSelect').value;
-      const color = document.getElementById('merchPreColorSelect').value;
+    function getSelectedMerchOptions(itemId, requireSelection = false) {
+      const sizeSelect = document.getElementById(`merchSize-${itemId}`);
+      const colorSelect = document.getElementById(`merchColor-${itemId}`);
+      const size = sizeSelect ? sizeSelect.value : 'One size';
+      const color = colorSelect ? colorSelect.value : 'Default';
       if (requireSelection && (!size || !color)) {
         showToast('Choose size and color before adding merch.', 'info');
         return null;
@@ -2737,6 +2907,25 @@
         const itemEntries = getMerchCartEntries().filter(entry => entry.itemId === item.id);
         const qty = itemEntries.reduce((sum, entry) => sum + entry.qty, 0);
         const stock = state.merchStock[`${state.activeMerchConcert.id}-${item.id}`] || 3;
+        const isCustomizable = Array.isArray(item.sizes) && item.sizes.length > 0 && !state.merchPreviewOnly;
+        const controls = isCustomizable ? `
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <label class="block">
+              <span class="text-[10px] font-black uppercase tracking-wider text-zinc-500">Size</span>
+              <select id="merchSize-${item.id}" class="merch-select mt-1 w-full border border-zinc-800 text-white rounded-lg px-3 py-2 pr-8 text-xs font-bold focus:outline-none focus:border-emerald-500">
+                <option value="">Size</option>
+                ${item.sizes.map(size => `<option>${size}</option>`).join('')}
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-[10px] font-black uppercase tracking-wider text-zinc-500">Color</span>
+              <select id="merchColor-${item.id}" class="merch-select mt-1 w-full border border-zinc-800 text-white rounded-lg px-3 py-2 pr-8 text-xs font-bold focus:outline-none focus:border-emerald-500">
+                <option value="">Color</option>
+                <option>Black</option><option>Cream</option><option>Tour green</option><option>Washed violet</option>
+              </select>
+            </label>
+          </div>
+        ` : '';
         const variants = itemEntries.length ? `
           <div class="mt-2 flex flex-wrap gap-1">
             ${itemEntries.map(entry => `
@@ -2754,6 +2943,7 @@
               <div class="text-xs font-bold text-white">${item.name}${qty > 1 ? ` <span class="text-zinc-400">x${qty}</span>` : ''}</div>
               <div class="text-xs text-emerald-400 font-semibold">$${item.price}${state.merchPreviewOnly ? '' : ` <span class="ml-1 text-amber-300">Only ${stock} left</span>`}</div>
               ${variants}
+              ${controls}
             </div>
           </div>
 
@@ -2780,13 +2970,13 @@
       }
 
       if (delta > 0) {
-        const options = getSelectedMerchOptions(true);
+        const options = getSelectedMerchOptions(itemId, true);
         if (!options) return;
         const key = makeMerchCartKey(itemId, options.size, options.color);
         const current = state.merchCart[key] || { itemId, size: options.size, color: options.color, qty: 0 };
         state.merchCart[key] = { ...current, qty: current.qty + 1 };
       } else {
-        const options = getSelectedMerchOptions(false);
+        const options = getSelectedMerchOptions(itemId, false);
         const preferredKey = options.size && options.color ? makeMerchCartKey(itemId, options.size, options.color) : '';
         const fallbackEntry = getMerchCartEntries().filter(entry => entry.itemId === itemId).at(-1);
         const key = state.merchCart[preferredKey] ? preferredKey : fallbackEntry?.key;
@@ -3036,7 +3226,8 @@
       if (modalBalance) modalBalance.innerText = walletText;
       document.getElementById('discountNavText').innerText = state.activeDealLabel ? 'Deal' : 'Spin';
       const discountText = document.getElementById('discountText');
-      if (discountText) discountText.innerText = state.activeDealLabel || 'No discount active';
+      if (discountText) discountText.innerText = state.lastSpinDate === todayKey() ? state.activeDealLabel : '';
+      renderWheelLockState();
       if (state.activeTab === 'checkout' && state.pendingCheckout) renderCheckoutPage();
       if (state.activeMerchConcert && !document.getElementById('merchModal').classList.contains('hidden') && !document.getElementById('merchCheckoutView').classList.contains('hidden')) {
         renderMerchCheckoutSummary();
@@ -3073,10 +3264,23 @@
       renderDailyWheel();
       updateWalletUI();
       document.getElementById('wheelModal').classList.remove('hidden');
+      renderWheelLockState();
+      if (state.wheelCountdownTimer) clearInterval(state.wheelCountdownTimer);
+      state.wheelCountdownTimer = setInterval(renderWheelLockState, 1000);
     }
 
     function closeWheelModal() {
       document.getElementById('wheelModal').classList.add('hidden');
+      if (state.wheelCountdownTimer) clearInterval(state.wheelCountdownTimer);
+      state.wheelCountdownTimer = null;
+    }
+
+    function openAboutModal() {
+      document.getElementById('aboutModal').classList.remove('hidden');
+    }
+
+    function closeAboutModal() {
+      document.getElementById('aboutModal').classList.add('hidden');
     }
 
     function startEngagementSystems() {
@@ -3151,6 +3355,48 @@
         label.innerText = deal.label.toUpperCase();
         wheel.insertBefore(label, wheel.firstElementChild);
       });
+      renderWheelLockState();
+    }
+
+    function getNextSpinCountdown() {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setDate(midnight.getDate() + 1);
+      midnight.setHours(0, 0, 0, 0);
+      const remaining = Math.max(0, midnight - now);
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      return `${hours}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+    }
+
+    function renderWheelLockState() {
+      const wheel = document.getElementById('discountWheel');
+      const overlay = document.getElementById('wheelLockedOverlay');
+      const countdown = document.getElementById('wheelCountdownText');
+      if (!wheel || !overlay) return;
+      const used = state.lastSpinDate === todayKey();
+      wheel.classList.toggle('wheel-locked', used);
+      overlay.classList.toggle('hidden', !used);
+      if (used && countdown) countdown.innerText = `Resets in ${getNextSpinCountdown()}`;
+    }
+
+    function enhanceDealForAccount(deal) {
+      if (!state.account || state.account.guest) return { ...deal };
+      const boosted = { ...deal };
+      if (boosted.discount) boosted.discount = Math.min(100, boosted.discount + 5);
+      if (boosted.flat) boosted.flat += 10;
+      if (boosted.wallet) boosted.wallet += 15;
+      boosted.fullLabel = `Member boost: ${boosted.fullLabel || boosted.label}`;
+      return boosted;
+    }
+
+    function showWheelWinPopup(message) {
+      const pop = document.getElementById('wheelWinPopup');
+      if (!pop) return;
+      pop.innerText = message;
+      pop.classList.remove('hidden');
+      setTimeout(() => pop.classList.add('hidden'), 2800);
     }
 
     function spinDiscountWheel() {
@@ -3162,7 +3408,7 @@
 
       const deals = state.wheelDeals.length ? state.wheelDeals : getDailyWheelDeals();
       const dealIndex = Math.floor(Math.random() * deals.length);
-      const deal = deals[dealIndex];
+      const deal = enhanceDealForAccount(deals[dealIndex]);
       state.discountPct = deal.discount;
       state.discountFlat = deal.flat || 0;
       state.activeDealLabel = deal.fullLabel || deal.label;
@@ -3179,6 +3425,7 @@
         updateWalletUI();
         launchConfetti();
         playWinSound();
+        showWheelWinPopup(`Unlocked: ${state.activeDealLabel}`);
         showToast(`You won ${state.activeDealLabel}!`, 'success');
       }, 3800);
     }
