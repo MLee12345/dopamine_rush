@@ -100,9 +100,6 @@
       font-weight: 800;
       pointer-events: none;
       dominant-baseline: middle;
-      paint-order: stroke;
-      stroke: rgba(255,255,255,0.7);
-      stroke-width: 2px;
     }
     .wheel-spin {
       transition: transform 4s cubic-bezier(0.08, 0.72, 0.05, 1);
@@ -257,6 +254,9 @@
     .merch-select option {
       background: #09090b;
       color: #f4f4f5;
+    }
+    .merch-option-menu {
+      animation: filterDrop 0.14s ease-out;
     }
     .wheel-win-pop {
       animation: toastSlide 0.2s ease-out forwards;
@@ -444,8 +444,11 @@
       <div class="bg-white border border-zinc-200 rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div>
           <div class="text-xs font-bold uppercase tracking-wider text-indigo-600">Profile</div>
-          <h2 id="profileName" class="text-2xl font-extrabold text-zinc-950">Guest</h2>
-          <p class="text-sm text-zinc-500">Concerts attended, ticket history, and merch purchases.</p>
+          <div id="profileIdentity" class="space-y-1">
+            <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold text-zinc-950 hover:text-indigo-700 cursor-pointer">Guest</h2>
+            <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 hover:text-indigo-700 cursor-pointer">Choose your city</div>
+          </div>
+          <p class="text-sm text-zinc-500 mt-2">Concerts attended, ticket history, and merch purchases.</p>
         </div>
         <button onclick="logoutAccount()" class="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-bold">Log out</button>
       </div>
@@ -1436,6 +1439,11 @@
       merchHoldProgress: 0,
       merchOptions: { size: '', color: '' },
       merchPendingOptions: {},
+      openMerchMenuKey: '',
+      profileEditField: '',
+      doorHoldTimer: null,
+      doorHoldProgress: 0,
+      doorHoldTicketId: '',
       queueClicksNeeded: 12,
       stageCam: 'Main Stage',
       stageTrackIndex: 0,
@@ -1487,6 +1495,7 @@
       initStageVisualizer();
       updateAccountUI();
       document.addEventListener('click', handleFilterOutsideClick);
+      document.addEventListener('click', handleMerchDropdownOutsideClick);
       window.addEventListener('popstate', handleBrowserNavigation);
       document.addEventListener('keydown', handleNavigationShortcuts);
       if (state.account) startEngagementSystems();
@@ -1587,8 +1596,8 @@
         return;
       }
       clearAccountError();
-      state.users.push({ username, password });
-      state.account = { username, guest: false };
+      state.users.push({ username, password, city: '' });
+      state.account = { username, city: '', guest: false };
       persistAccountState();
       updateAccountUI();
       startEngagementSystems();
@@ -1620,7 +1629,7 @@
       const user = state.users.find(entry => entry.username.toLowerCase() === username.toLowerCase() && entry.password === password);
       if (!user) return setAccountError('Username or password is incorrect.', 'both');
       clearAccountError();
-      state.account = { username: user.username, guest: false };
+      state.account = { username: user.username, city: user.city || '', guest: false };
       persistAccountState();
       updateAccountUI();
       startEngagementSystems();
@@ -1635,7 +1644,7 @@
     }
 
     function skipAccount() {
-      state.account = { username: 'Guest', guest: true };
+      state.account = { username: 'Guest', city: '', guest: true };
       persistAccountState();
       updateAccountUI();
       startEngagementSystems();
@@ -1647,12 +1656,118 @@
       localStorage.removeItem('dopamineAccount');
       stopEngagementSystems();
       updateAccountUI();
-      navigateTo('account');
+      showAccountChoices();
+      navigateTo('account', { replaceHistory: true });
     }
 
     function updateAccountUI() {
       const profileName = document.getElementById('profileName');
       if (profileName) profileName.innerText = state.account ? state.account.username : 'Guest';
+      const profileCity = document.getElementById('profileCity');
+      if (profileCity) profileCity.innerText = state.account?.city || 'Choose your city';
+    }
+
+    function renderProfileIdentityDisplay() {
+      const holder = document.getElementById('profileIdentity');
+      if (!holder) return;
+      const name = state.account ? state.account.username : 'Guest';
+      const city = state.account?.city || 'Choose your city';
+      const editableClass = state.account && !state.account.guest ? 'hover:text-indigo-700 cursor-pointer' : '';
+      holder.innerHTML = `
+        <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold text-zinc-950 ${editableClass}">${escapeHtml(name)}</h2>
+        <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(city)}</div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+    }
+
+    function getCityOptions(query = '') {
+      const cities = [...new Set(Object.values(VENUES).map(venue => venue.city))].sort();
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) return cities;
+      return cities.filter(city => city.toLowerCase().includes(cleanQuery));
+    }
+
+    function beginProfileEdit(field) {
+      if (!state.account || state.account.guest) return;
+      state.profileEditField = field;
+      renderProfileIdentityEditor(field);
+    }
+
+    function renderProfileIdentityEditor(field, valueOverride = null) {
+      const holder = document.getElementById('profileIdentity');
+      if (!holder || !state.account) return;
+      const value = valueOverride ?? (field === 'username' ? state.account.username : (state.account.city || ''));
+      const suggestions = field === 'city' ? getCityOptions(value).slice(0, 5) : [];
+      holder.innerHTML = `
+        <div class="relative max-w-xs">
+          <input id="profileEditInput" value="${escapeHtml(value)}" oninput="handleProfileEditInput('${field}', this.value)" onkeydown="handleProfileEditKey(event, '${field}')" onblur="saveProfileEdit('${field}')" class="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-950 focus:outline-none focus:border-indigo-500">
+          ${field === 'city' ? `<div id="profileCitySuggestions" class="${suggestions.length ? '' : 'hidden'} absolute left-0 right-0 top-[calc(100%+6px)] z-30 rounded-xl border border-indigo-200 bg-white p-1 shadow-xl">
+            ${renderProfileCitySuggestions(suggestions)}
+          </div>` : ''}
+        </div>
+      `;
+      const input = document.getElementById('profileEditInput');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function handleProfileEditInput(field, value) {
+      if (field !== 'city') return;
+      const menu = document.getElementById('profileCitySuggestions');
+      if (!menu) return;
+      const suggestions = getCityOptions(value).slice(0, 5);
+      menu.innerHTML = renderProfileCitySuggestions(suggestions);
+      menu.classList.toggle('hidden', !suggestions.length);
+    }
+
+    function renderProfileCitySuggestions(suggestions) {
+      return suggestions.map(city => `<button type="button" onmousedown="event.preventDefault(); saveProfileEdit('city', '${city.replace(/'/g, "\\'")}')" class="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-indigo-950 hover:bg-indigo-50">${city}</button>`).join('');
+    }
+
+    function handleProfileEditKey(event, field) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        saveProfileEdit(field);
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        state.profileEditField = '';
+        renderProfilePage();
+      }
+    }
+
+    function saveProfileEdit(field, forcedValue = null) {
+      if (!state.account || state.account.guest) return;
+      if (state.profileEditField !== field) return;
+      const input = document.getElementById('profileEditInput');
+      const nextValue = (forcedValue ?? input?.value ?? '').trim();
+      if (field === 'username') {
+        if (nextValue.length < 3) {
+          showToast('Name needs at least 3 characters.', 'info');
+          renderProfilePage();
+          return;
+        }
+        const taken = state.users.some(user => user.username.toLowerCase() === nextValue.toLowerCase() && user.username.toLowerCase() !== state.account.username.toLowerCase());
+        if (taken) {
+          showToast('That username is already taken.', 'info');
+          renderProfilePage();
+          return;
+        }
+        const user = state.users.find(entry => entry.username.toLowerCase() === state.account.username.toLowerCase());
+        if (user) user.username = nextValue;
+        state.account.username = nextValue;
+      } else if (field === 'city') {
+        const user = state.users.find(entry => entry.username.toLowerCase() === state.account.username.toLowerCase());
+        if (user) user.city = nextValue;
+        state.account.city = nextValue;
+      }
+      state.profileEditField = '';
+      persistAccountState();
+      renderProfilePage();
     }
 
     function setAccountError(message, field = 'both') {
@@ -2537,11 +2652,12 @@
               </div>
             ` : `
               <div class="flex items-center gap-2">
-                <button onclick="toggleDoorStatus('${t.ticketId}')" class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 rounded-lg text-[11px] font-bold">
+                <button onpointerdown="startDoorHold(event, '${t.ticketId}')" onpointerup="cancelDoorHold()" onpointerleave="cancelDoorHold()" onpointercancel="cancelDoorHold()" class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 rounded-lg text-[11px] font-bold">
                   Open Doors
                 </button>
-                <span class="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg">
-                  <i class="fa-solid fa-lock mr-1 text-zinc-600"></i> Doors open ${concert.date}
+                <span class="relative overflow-hidden text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg">
+                  <span id="doorLockFill-${t.ticketId}" class="absolute inset-y-0 left-0 w-0 bg-indigo-100"></span>
+                  <span class="relative z-10"><i class="fa-solid fa-lock mr-1 text-zinc-600"></i> Doors open ${concert.date}</span>
                 </span>
               </div>
             `}
@@ -2554,6 +2670,35 @@
 
         list.appendChild(card);
       });
+    }
+
+    function startDoorHold(event, ticketId) {
+      event.preventDefault();
+      cancelDoorHold();
+      state.doorHoldTicketId = ticketId;
+      state.doorHoldProgress = 0;
+      const fill = document.getElementById(`doorLockFill-${ticketId}`);
+      if (fill) fill.style.width = '0%';
+      state.doorHoldTimer = setInterval(() => {
+        state.doorHoldProgress += 5;
+        const activeFill = document.getElementById(`doorLockFill-${ticketId}`);
+        if (activeFill) activeFill.style.width = `${Math.min(100, state.doorHoldProgress)}%`;
+        if (state.doorHoldProgress >= 100) {
+          cancelDoorHold(false);
+          toggleDoorStatus(ticketId);
+        }
+      }, 55);
+    }
+
+    function cancelDoorHold(reset = true) {
+      if (state.doorHoldTimer) clearInterval(state.doorHoldTimer);
+      if (reset && state.doorHoldTicketId) {
+        const fill = document.getElementById(`doorLockFill-${state.doorHoldTicketId}`);
+        if (fill) fill.style.width = '0%';
+      }
+      state.doorHoldTimer = null;
+      state.doorHoldProgress = 0;
+      state.doorHoldTicketId = '';
     }
 
     function toggleDoorStatus(ticketId) {
@@ -2617,7 +2762,7 @@
     }
 
     function renderProfilePage() {
-      updateAccountUI();
+      renderProfileIdentityDisplay();
       const concerts = document.getElementById('profileConcerts');
       const merch = document.getElementById('profileMerch');
       concerts.innerHTML = state.profileHistory.concerts.length ? state.profileHistory.concerts.map(item => `
@@ -2942,20 +3087,55 @@
     }
 
     function getSelectedMerchOptions(itemId, requireSelection = false) {
-      const sizeSelect = document.getElementById(`merchSize-${itemId}`);
-      const colorSelect = document.getElementById(`merchColor-${itemId}`);
-      const size = sizeSelect ? sizeSelect.value : 'One size';
-      const color = colorSelect ? colorSelect.value : 'Default';
-      if (size || color) state.merchPendingOptions[itemId] = { size, color };
+      const options = state.merchPendingOptions[itemId] || {};
+      const size = options.size || '';
+      const color = options.color || '';
       if (requireSelection && (!size || !color)) {
         showToast('Choose size and color before adding merch.', 'info');
         return null;
       }
-      return { size, color };
+      return { size: size || 'One size', color: color || 'Default' };
     }
 
-    function rememberMerchOption(itemId) {
-      getSelectedMerchOptions(itemId, false);
+    function toggleMerchOptionMenu(itemId, field) {
+      const key = `${itemId}-${field}`;
+      state.openMerchMenuKey = state.openMerchMenuKey === key ? '' : key;
+      renderMerchItems();
+    }
+
+    function selectMerchOption(itemId, field, value) {
+      const current = state.merchPendingOptions[itemId] || {};
+      state.merchPendingOptions[itemId] = { ...current, [field]: value };
+      state.openMerchMenuKey = '';
+      renderMerchItems();
+    }
+
+    function handleMerchDropdownOutsideClick(event) {
+      if (event.target.closest('.merch-option-root')) return;
+      if (!state.openMerchMenuKey) return;
+      state.openMerchMenuKey = '';
+      if (state.activeMerchConcert && !document.getElementById('merchModal').classList.contains('hidden')) renderMerchItems();
+    }
+
+    function renderMerchOptionDropdown(itemId, field, options, placeholder) {
+      const selected = state.merchPendingOptions[itemId]?.[field] || '';
+      const key = `${itemId}-${field}`;
+      const isOpen = state.openMerchMenuKey === key;
+      return `
+        <div class="relative merch-option-root">
+          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 hover:border-emerald-500 rounded-lg px-3 py-2 text-xs font-bold text-white flex items-center justify-between">
+            <span>${selected || placeholder}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-emerald-400"></i>
+          </button>
+          <div class="${isOpen ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
+            ${options.map(option => `
+              <button type="button" onclick="selectMerchOption('${itemId}', '${field}', '${option.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-zinc-100 hover:bg-emerald-500/15 flex items-center justify-between">
+                <span>${option}</span>${selected === option ? '<i class="fa-solid fa-check text-emerald-400"></i>' : ''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
     }
 
     function calculateMerchPayment() {
@@ -2978,21 +3158,10 @@
         const qty = itemEntries.reduce((sum, entry) => sum + entry.qty, 0);
         const stock = state.merchStock[`${state.activeMerchConcert.id}-${item.id}`] || 3;
         const isCustomizable = Array.isArray(item.sizes) && item.sizes.length > 0 && !state.merchPreviewOnly;
-        const pending = state.merchPendingOptions[item.id] || {};
         const controls = isCustomizable ? `
           <div class="mt-3 grid grid-cols-2 gap-2">
-            <label class="block">
-              <select id="merchSize-${item.id}" onchange="rememberMerchOption('${item.id}')" class="merch-select w-full border border-zinc-800 rounded-lg px-3 py-2 pr-8 text-xs font-bold focus:outline-none focus:border-emerald-500">
-                <option value="">Size</option>
-                ${item.sizes.map(size => `<option ${pending.size === size ? 'selected' : ''}>${size}</option>`).join('')}
-              </select>
-            </label>
-            <label class="block">
-              <select id="merchColor-${item.id}" onchange="rememberMerchOption('${item.id}')" class="merch-select w-full border border-zinc-800 rounded-lg px-3 py-2 pr-8 text-xs font-bold focus:outline-none focus:border-emerald-500">
-                <option value="">Color</option>
-                ${['Black', 'Cream', 'Tour green', 'Washed violet'].map(color => `<option ${pending.color === color ? 'selected' : ''}>${color}</option>`).join('')}
-              </select>
-            </label>
+            ${renderMerchOptionDropdown(item.id, 'size', item.sizes, 'Size')}
+            ${renderMerchOptionDropdown(item.id, 'color', ['Black', 'Cream', 'Tour green', 'Washed violet'], 'Color')}
           </div>
         ` : '';
         const variants = itemEntries.length ? `
