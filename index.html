@@ -135,16 +135,17 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 82px;
-      margin-left: -41px;
-      margin-top: -8px;
-      transform-origin: 41px 8px;
+      width: 62px;
+      min-height: 28px;
+      margin: 0;
       color: #fff;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
       line-height: 1.05;
       text-align: center;
-      writing-mode: vertical-rl;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-shadow: 0 1px 3px rgba(0,0,0,0.55);
       pointer-events: none;
     }
@@ -407,30 +408,19 @@
             <i class="fa-solid fa-circle-info"></i> Demo only. No real money is spent.
           </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] min-h-0">
-          <div class="p-5 bg-indigo-700 text-white space-y-4">
-            <div class="rounded-2xl bg-white/10 border border-white/15 p-4">
-              <div class="text-xs font-black uppercase tracking-wider text-emerald-200 mb-2">TL;DR</div>
-              <p class="text-sm leading-relaxed text-indigo-50">
-                DopamineLive is a local simulation. It stores demo account names, virtual tickets, virtual merch, wallet balance, and profile history on this device so the experience can persist between reloads.
-              </p>
-            </div>
-            <div class="grid grid-cols-3 gap-2 text-center">
-              <div class="rounded-xl bg-white/10 border border-white/15 p-3">
-                <i class="fa-solid fa-ticket text-emerald-200"></i>
-                <div class="text-[10px] font-bold mt-1">Fake tickets</div>
+        <div class="min-h-0 grid grid-rows-[auto_1fr]">
+          <div class="bg-indigo-700 p-5 text-white border-b border-indigo-500">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+              <div class="lg:w-[42%]">
+                <div class="text-xs font-black uppercase tracking-wider text-emerald-200 mb-2">TL;DR</div>
+                <p class="text-sm leading-relaxed text-indigo-50">DopamineLive is a local simulation. It stores demo account names, virtual tickets, virtual merch, wallet balance, and profile history on this device so the experience can persist between reloads.</p>
               </div>
-              <div class="rounded-xl bg-white/10 border border-white/15 p-3">
-                <i class="fa-solid fa-wallet text-emerald-200"></i>
-                <div class="text-[10px] font-bold mt-1">Fake wallet</div>
+              <div class="grid grid-cols-3 gap-2 flex-1 text-center">
+                <div class="rounded-xl bg-white/10 border border-white/15 p-3"><i class="fa-solid fa-ticket text-emerald-200"></i><div class="text-[10px] font-bold mt-1">Fake tickets</div></div>
+                <div class="rounded-xl bg-white/10 border border-white/15 p-3"><i class="fa-solid fa-wallet text-emerald-200"></i><div class="text-[10px] font-bold mt-1">Fake wallet</div></div>
+                <div class="rounded-xl bg-white/10 border border-white/15 p-3"><i class="fa-solid fa-lock text-emerald-200"></i><div class="text-[10px] font-bold mt-1">Local data</div></div>
               </div>
-              <div class="rounded-xl bg-white/10 border border-white/15 p-3">
-                <i class="fa-solid fa-lock text-emerald-200"></i>
-                <div class="text-[10px] font-bold mt-1">Local data</div>
-              </div>
-            </div>
-            <div class="rounded-2xl bg-emerald-300 text-zinc-950 p-4 text-sm font-black">
-              Purchases, discounts, queues, wallet charges, and checkout timers are all simulated. No external checkout occurs.
+              <div class="lg:w-[26%] rounded-2xl bg-emerald-300 text-zinc-950 p-4 text-sm font-black">Purchases, discounts, queues, wallet charges, and checkout timers are all simulated. No external checkout occurs.</div>
             </div>
           </div>
           <div class="min-h-0 overflow-y-auto p-5 space-y-4 text-sm text-zinc-600">
@@ -1583,6 +1573,8 @@
       wheelRotation: 0,
       wheelDeals: [],
       wheelCountdownTimer: null,
+      wheelSpinning: false,
+      deferWheelLock: false,
       siteSeconds: 0,
       walletRewardTimer: null,
       spendPopupInitialTimer: null,
@@ -2358,51 +2350,51 @@
         `,
         msg: `
           <defs>
-            <path id="msg-front-label" d="M101 135 C118 126 182 126 199 135"/>
-            <path id="msg-middle-label" d="M77 98 C104 80 196 80 223 98"/>
-            <path id="msg-back-label" d="M51 61 C91 38 209 38 249 61"/>
+            <path id="msg-front-label" d="M104 136 C122 129 178 129 196 136"/>
+            <path id="msg-middle-label" d="M77 101 C104 86 196 86 223 101"/>
+            <path id="msg-back-label" d="M48 60 C90 38 210 38 252 60"/>
           </defs>
           ${stage}
-          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M84 133 C104 108 196 108 216 133 L199 149 C184 133 116 133 101 149 Z" fill="${fill(front.id)}" opacity="0.86"/>
-          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M55 98 C84 58 216 58 245 98 L225 121 C204 92 96 92 75 121 Z" fill="${fill(middle.id)}" opacity="0.86"/>
-          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M28 58 C68 18 232 18 272 58 L252 86 C219 53 81 53 48 86 Z" fill="${fill(back.id)}" opacity="0.86"/>
+          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M92 137 C111 118 189 118 208 137 L195 151 C179 138 121 138 105 151 Z" fill="${fill(front.id)}" opacity="0.86"/>
+          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M60 102 C89 67 211 67 240 102 L222 122 C199 94 101 94 78 122 Z" fill="${fill(middle.id)}" opacity="0.86"/>
+          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M26 52 C66 14 234 14 274 52 L253 70 C218 42 82 42 47 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
           ${curvedSectionLabel(front, 'msg-front-label')}
           ${curvedSectionLabel(middle, 'msg-middle-label')}
           ${curvedSectionLabel(back, 'msg-back-label')}
         `,
         redrocks: `
           ${stage}
-          <polygon id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" points="91,122 209,112 224,136 77,148" fill="${fill(front.id)}" opacity="0.86"/>
-          <polygon id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" points="63,82 237,67 257,96 45,116" fill="${fill(middle.id)}" opacity="0.86"/>
-          <polygon id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" points="39,40 262,20 280,52 21,77" fill="${fill(back.id)}" opacity="0.86"/>
+          <polygon id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" points="92,126 208,117 220,139 80,149" fill="${fill(front.id)}" opacity="0.86"/>
+          <polygon id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" points="63,83 237,68 253,94 47,113" fill="${fill(middle.id)}" opacity="0.86"/>
+          <polygon id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" points="39,39 262,20 276,48 24,71" fill="${fill(back.id)}" opacity="0.86"/>
           ${straightSectionLabel(front, 150, 130)}
           ${straightSectionLabel(middle, 150, 91)}
           ${straightSectionLabel(back, 150, 51)}
         `,
         o2: `
           <defs>
-            <path id="o2-front-label" d="M96 128 C116 119 184 119 204 128"/>
-            <path id="o2-middle-label" d="M61 91 C95 76 205 76 239 91"/>
-            <path id="o2-back-label" d="M33 50 C76 31 224 31 267 50"/>
+            <path id="o2-front-label" d="M98 137 C119 129 181 129 202 137"/>
+            <path id="o2-middle-label" d="M63 100 C97 84 203 84 237 100"/>
+            <path id="o2-back-label" d="M30 57 C75 35 225 35 270 57"/>
           </defs>
           ${stage}
-          <ellipse id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" cx="150" cy="128" rx="61" ry="18" fill="${fill(front.id)}" opacity="0.86"/>
-          <ellipse id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" cx="150" cy="91" rx="94" ry="24" fill="${fill(middle.id)}" opacity="0.86"/>
-          <ellipse id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" cx="150" cy="50" rx="124" ry="28" fill="${fill(back.id)}" opacity="0.86"/>
+          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M89 137 C108 116 192 116 211 137 L199 152 C181 138 119 138 101 152 Z" fill="${fill(front.id)}" opacity="0.86"/>
+          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M54 100 C83 69 217 69 246 100 L226 122 C201 97 99 97 74 122 Z" fill="${fill(middle.id)}" opacity="0.86"/>
+          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M20 51 C62 13 238 13 280 51 L257 70 C220 43 80 43 43 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
           ${curvedSectionLabel(front, 'o2-front-label')}
           ${curvedSectionLabel(middle, 'o2-middle-label')}
           ${curvedSectionLabel(back, 'o2-back-label')}
         `,
         hollywoodbowl: `
           <defs>
-            <path id="hb-front-label" d="M105 127 C126 116 174 116 195 127"/>
-            <path id="hb-middle-label" d="M83 102 C110 87 190 87 217 102"/>
-            <path id="hb-back-label" d="M57 66 C94 42 206 42 243 66"/>
+            <path id="hb-front-label" d="M107 139 C126 129 174 129 193 139"/>
+            <path id="hb-middle-label" d="M82 103 C109 88 191 88 218 103"/>
+            <path id="hb-back-label" d="M54 62 C92 40 208 40 246 62"/>
           </defs>
           ${stage}
-          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M104 139 L196 139 L213 113 C184 101 116 101 87 113 Z" fill="${fill(front.id)}" opacity="0.86"/>
-          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M66 105 C92 78 208 78 234 105 L215 126 C191 108 109 108 85 126 Z" fill="${fill(middle.id)}" opacity="0.86"/>
-          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M31 67 C70 27 230 27 269 67 L246 94 C211 63 89 63 54 94 Z" fill="${fill(back.id)}" opacity="0.86"/>
+          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M101 142 L199 142 L210 119 C183 108 117 108 90 119 Z" fill="${fill(front.id)}" opacity="0.86"/>
+          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M64 104 C91 77 209 77 236 104 L216 125 C192 106 108 106 84 125 Z" fill="${fill(middle.id)}" opacity="0.86"/>
+          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M28 55 C68 19 232 19 272 55 L248 72 C212 47 88 47 52 72 Z" fill="${fill(back.id)}" opacity="0.86"/>
           ${curvedSectionLabel(front, 'hb-front-label')}
           ${curvedSectionLabel(middle, 'hb-middle-label')}
           ${curvedSectionLabel(back, 'hb-back-label')}
@@ -3805,6 +3797,9 @@
 
     function closeWheelModal() {
       document.getElementById('wheelModal').classList.add('hidden');
+      // Keep the wheel visible through the win moment; the daily lock appears on
+      // the next opening, after the player has had a chance to see their prize.
+      state.deferWheelLock = false;
       if (state.wheelCountdownTimer) clearInterval(state.wheelCountdownTimer);
       state.wheelCountdownTimer = null;
     }
@@ -3885,7 +3880,9 @@
         const angle = idx * 45 + 22.5;
         const label = document.createElement('span');
         label.className = 'wheel-label';
-        label.style.transform = `rotate(${angle}deg) translateY(-112px)`;
+        // Place labels at the center of each slice, then counter-rotate them so
+        // every label stays compact and readable inside its own wedge.
+        label.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translateY(-94px) rotate(${-angle}deg)`;
         label.innerText = deal.label.toUpperCase();
         wheel.insertBefore(label, wheel.firstElementChild);
       });
@@ -3910,7 +3907,7 @@
       const pointer = document.getElementById('wheelPointer');
       const countdown = document.getElementById('wheelCountdownText');
       if (!wheel || !overlay) return;
-      const used = state.lastSpinDate === todayKey();
+      const used = state.lastSpinDate === todayKey() && !state.deferWheelLock;
       wheel.classList.toggle('hidden', used);
       if (pointer) pointer.classList.toggle('hidden', used);
       overlay.classList.toggle('hidden', !used);
@@ -3937,7 +3934,7 @@
 
     function spinDiscountWheel() {
       const today = todayKey();
-      if (state.lastSpinDate === today) {
+      if (state.lastSpinDate === today || state.wheelSpinning) {
         showToast('Daily spin already used. Come back tomorrow.', 'info');
         return;
       }
@@ -3950,6 +3947,8 @@
       state.activeDealLabel = deal.fullLabel || deal.label;
       if (deal.wallet) state.walletBalance += deal.wallet;
       state.lastSpinDate = today;
+      state.wheelSpinning = true;
+      state.deferWheelLock = true;
       const wheel = document.getElementById('discountWheel');
       const targetAngle = dealIndex * 45 + 22.5;
       const currentAngle = state.wheelRotation % 360;
@@ -3958,6 +3957,7 @@
       state.wheelRotation += extraTurns;
       wheel.style.transform = `rotate(${state.wheelRotation}deg)`;
       setTimeout(() => {
+        state.wheelSpinning = false;
         updateWalletUI();
         launchConfetti();
         playWinSound();
