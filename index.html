@@ -70,8 +70,6 @@
     .scroll-on-demand {
       scrollbar-width: none;
     }
-    .scroll-on-demand:hover,
-    .scroll-on-demand:focus-within,
     .scroll-on-demand.is-scrolling {
       scrollbar-width: thin;
     }
@@ -79,8 +77,6 @@
       width: 0;
       height: 0;
     }
-    .scroll-on-demand:hover::-webkit-scrollbar,
-    .scroll-on-demand:focus-within::-webkit-scrollbar,
     .scroll-on-demand.is-scrolling::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -461,11 +457,11 @@
     <section id="page-profile" class="hidden space-y-6">
       <div class="bg-white border border-zinc-200 rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div>
-          <div id="profileIdentity">
-            <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold text-zinc-950 hover:text-indigo-700 cursor-pointer">Guest</h2>
+          <div id="profileIdentity" class="leading-none">
+            <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold leading-none text-zinc-950 hover:text-indigo-700 cursor-pointer">Guest</h2>
             <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 hover:text-indigo-700 cursor-pointer"></div>
           </div>
-          <p class="text-sm text-zinc-500 mt-2">Concerts attended, ticket history, and merch purchases.</p>
+          <p class="text-sm text-zinc-500 mt-0.5">Concerts attended, ticket history, and merch purchases.</p>
         </div>
         <button onclick="logoutAccount()" class="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-bold">Log out</button>
       </div>
@@ -730,8 +726,8 @@
 
         <!-- Queue Line Countdown Widget -->
         <div class="space-y-3 py-2">
-          <button id="joinQueueBox" onclick="chargeMerchAccess()" class="w-full bg-zinc-950 border border-zinc-800 hover:border-emerald-500 rounded-xl p-4 text-left transition-all">
-            <span class="block text-sm font-bold text-white">Tap to move up</span>
+          <button id="joinQueueBox" onclick="chargeMerchAccess()" class="w-full bg-zinc-950 border border-zinc-800 hover:border-emerald-500 rounded-xl p-5 text-center transition-all">
+            <span class="block text-3xl" aria-label="click">👆</span>
           </button>
 
           <!-- Progress Bar Decay -->
@@ -739,9 +735,7 @@
             <div id="queueDecayBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full w-0"></div>
           </div>
 
-          <p class="text-[11px] text-zinc-400 text-center" id="queueStatusSubtext">
-            Keep the bar charged.
-          </p>
+          <p class="text-[11px] text-zinc-400 text-center" id="queueStatusSubtext"></p>
         </div>
       </div>
 
@@ -753,7 +747,7 @@
           <h3 class="text-2xl font-black text-white">You've reached the front!</h3>
         </div>
         <button onclick="continueToMerchShop()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20">
-          Continue to buy
+          Continue to front of line
         </button>
       </div>
 
@@ -1708,11 +1702,11 @@
       const cityValue = state.account?.city || '';
       const citySuggestions = editingCity && cityValue.trim() ? getCityOptions(cityValue).slice(0, 8) : [];
       holder.innerHTML = `
-        <div class="relative">
+        <div class="relative leading-none">
           ${editingName ? `
             <input id="profileEditInput" value="${escapeHtml(name)}" onkeydown="handleProfileEditKey(event, 'username')" onblur="saveProfileEdit('username')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-2xl font-extrabold leading-tight text-zinc-950 focus:outline-none focus:border-indigo-600" style="width:${Math.max(10, name.length + 4)}ch">
           ` : `
-            <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold leading-tight text-zinc-950 ${editableClass}">${escapeHtml(name)}</h2>
+            <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold leading-none text-zinc-950 ${editableClass}">${escapeHtml(name)}</h2>
           `}
         </div>
         <div class="relative inline-block max-w-xs ${city || editingCity || (state.account && !state.account.guest) ? 'mt-1' : ''}">
@@ -2892,7 +2886,7 @@
       state.activeMerchConcert = CONCERTS.find(c => c.id === concertId);
       state.merchPreviewOnly = previewOnly;
       document.getElementById('merchModalArtist').innerText = `${state.activeMerchConcert.artist} Official Merch`;
-      document.getElementById('merchModalSubtitle').innerText = previewOnly ? 'Preview only' : 'Pick your merch';
+      document.getElementById('merchModalSubtitle').innerText = previewOnly ? 'Preview only' : 'Tap the box to get to the front of the queue';
 
       // 1. Randomly select population level with weighted probability
       state.queuePopulationLevel = selectWeightedPopulation();
@@ -3017,6 +3011,7 @@
       document.getElementById('merchFrontView').classList.remove('hidden');
       document.getElementById('merchShopView').classList.add('hidden');
       document.getElementById('merchCheckoutView').classList.add('hidden');
+      document.getElementById('merchModalSubtitle').innerText = 'Continue to front of line';
       if (!state.merchPreviewOnly) {
         launchConfetti();
         playWinSound();
@@ -3175,6 +3170,10 @@
 
     function getSelectedMerchOptions(itemId, requireSelection = false) {
       ensureMerchDefaults(getMerchItem(itemId));
+      const item = getMerchItem(itemId);
+      if (!Array.isArray(item?.sizes) || !item.sizes.length) {
+        return { size: 'One size', color: 'Default' };
+      }
       const options = state.merchPendingOptions[itemId] || {};
       const size = options.size || '';
       const color = options.color || '';
@@ -3236,9 +3235,9 @@
       const isOpen = state.openMerchMenuKey === key;
       return `
         <div class="relative merch-option-root">
-          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 ${locked ? 'cursor-default text-zinc-400' : 'hover:border-emerald-500 text-white'} rounded-lg px-3 py-2 text-xs font-bold flex items-center justify-between">
+          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 ${locked ? 'cursor-default text-zinc-300' : 'hover:border-emerald-500 text-white'} rounded-lg px-3 py-2 text-xs font-bold flex items-center justify-between">
             <span id="merchOptionLabel-${itemId}-${field}">${selected || placeholder}</span>
-            <i class="fa-solid ${locked ? 'fa-lock text-zinc-500' : 'fa-chevron-down text-emerald-400'} text-[10px]"></i>
+            ${locked ? '<span class="text-[10px] text-zinc-500">Fixed</span>' : '<i class="fa-solid fa-chevron-down text-emerald-400 text-[10px]"></i>'}
           </button>
           <div id="merchOptionMenu-${itemId}-${field}" data-merch-option-menu data-item-id="${itemId}" data-field="${field}" data-placeholder="${placeholder}" class="${isOpen && !locked ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
             ${options.map(option => `
@@ -3379,6 +3378,7 @@
       }
       document.getElementById('merchShopView').classList.add('hidden');
       document.getElementById('merchCheckoutView').classList.remove('hidden');
+      document.getElementById('merchModalSubtitle').innerText = 'Merch checkout';
       renderMerchCheckoutSummary();
       updateMerchOptionState();
       stopMerchInventoryTimer();
@@ -3401,7 +3401,6 @@
         return `<div class="flex items-center justify-between gap-3 text-sm"><span class="text-zinc-300">${item.name}${qtyLabel} <span class="text-zinc-500">${entry.size} / ${entry.color}</span></span><span class="font-bold text-white">$${(item.price * entry.qty).toFixed(2)}</span></div>`;
       }).join('');
       container.innerHTML = `
-        <div class="text-xs font-bold uppercase tracking-wider text-emerald-400">Merch checkout</div>
         <div class="space-y-2">${rows}</div>
         <div class="flex items-center justify-between pt-3 border-t border-zinc-800"><span class="text-zinc-400 text-sm">Merch</span><span class="font-bold text-white">$${payment.subtotal.toFixed(2)}</span></div>
         <div class="flex items-center justify-between"><span class="text-zinc-400 text-sm">Tax (${formatTaxRate()})</span><span class="font-bold text-white">$${payment.tax.toFixed(2)}</span></div>
