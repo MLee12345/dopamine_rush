@@ -330,7 +330,7 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main id="appContainer" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <main id="appContainer" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
     <!-- PAGE 0: ACCOUNT START -->
     <section id="page-account" class="hidden min-h-[78vh] grid place-items-center">
@@ -514,7 +514,7 @@
           <button onclick="navigateTo('discover')" class="text-zinc-500 hover:text-indigo-700 text-xs flex items-center gap-1 mb-2">
             <i class="fa-solid fa-arrow-left"></i> Back to Discover
           </button>
-          <h2 id="modalArtistTitle" class="text-2xl font-bold text-zinc-950">Select Tickets</h2>
+          <h2 id="modalArtistTitle" class="text-xl font-bold text-zinc-950">Select Tickets</h2>
           <p id="modalVenueInfo" class="text-base text-zinc-500">Venue • City • Capacity</p>
         </div>
         <div id="reservationTimerBadge" class="hidden text-sm bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2 rounded-lg font-bold">
@@ -522,8 +522,8 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(410px,0.9fr)] gap-5 items-stretch lg:min-h-[560px]">
-        <div class="bg-white border border-zinc-200 rounded-lg p-5 flex flex-col items-center justify-start h-auto lg:h-[560px] shadow-sm">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(410px,0.9fr)] gap-4 items-stretch lg:min-h-[535px]">
+        <div class="bg-white border border-zinc-200 rounded-lg p-4 flex flex-col items-center justify-start h-auto lg:h-[535px] shadow-sm">
           <div class="w-full flex items-center justify-between mb-3">
             <div class="text-sm font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
               <i class="fa-solid fa-layer-group"></i> Venue Diagram
@@ -539,7 +539,7 @@
             <!-- Dynamic legend inserted via JS -->
           </div>
 
-          <div class="w-full mt-4 bg-zinc-50 border border-zinc-200 rounded-lg p-4 space-y-3">
+          <div class="w-full mt-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3 space-y-2">
             <div class="flex items-center justify-between">
               <label class="text-sm font-semibold text-zinc-500 uppercase tracking-wider block">Music Preview</label>
               <span id="previewArtistLabel" class="text-sm text-zinc-500">Artist playlist</span>
@@ -550,15 +550,15 @@
           </div>
         </div>
 
-        <div class="flex flex-col space-y-4 h-auto lg:h-[560px]">
-          <div class="bg-white border border-zinc-200 rounded-lg p-5 space-y-4 shadow-sm flex flex-col flex-1 min-h-0">
+        <div class="flex flex-col space-y-3 h-auto lg:h-[535px]">
+          <div class="bg-white border border-zinc-200 rounded-lg p-4 space-y-3 shadow-sm flex flex-col flex-1 min-h-0">
             <label class="text-sm font-semibold text-zinc-500 uppercase tracking-wider block">Choose Seating Section</label>
             <div id="sectionList" class="space-y-2 flex-1 min-h-0">
               <!-- Tier Options inserted via JS -->
             </div>
           </div>
 
-          <div class="bg-white border border-zinc-200 p-5 rounded-lg space-y-4 shadow-sm">
+          <div class="bg-white border border-zinc-200 p-4 rounded-lg space-y-3 shadow-sm">
             <div class="flex items-center justify-between text-base text-zinc-600">
               <span>Ticket Quantity</span>
               <div class="flex items-center space-x-2 bg-zinc-100 border border-zinc-300 rounded-lg p-1">
@@ -747,7 +747,7 @@
           <h3 class="text-2xl font-black text-white">You've reached the front!</h3>
         </div>
         <button onclick="continueToMerchShop()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20">
-          Continue to front of line
+          Continue
         </button>
       </div>
 
@@ -864,9 +864,10 @@
         <span>— Verified Stage & Venue Ticket Infrastructure</span>
       </div>
       <div class="flex items-center space-x-4 text-zinc-400">
+        <button onclick="openAboutModal()" class="hover:text-white font-semibold">About</button>
         <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Verified Seats</span>
         <span><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Instant Stage Doors</span>
-        <button onclick="openAboutModal()" class="hover:text-white font-semibold">About</button>
+        <button onclick="resetAccountData()" class="hover:text-rose-300 font-semibold">Reset Account</button>
       </div>
     </div>
   </footer>
@@ -1625,6 +1626,7 @@
       persistAccountState();
       updateAccountUI();
       startEngagementSystems();
+      clearDiscoverSearch();
       showToast(`Welcome, ${username}.`, 'success');
       navigateTo('discover');
     }
@@ -1657,6 +1659,7 @@
       persistAccountState();
       updateAccountUI();
       startEngagementSystems();
+      clearDiscoverSearch();
       showToast(`Welcome back, ${user.username}.`, 'success');
       navigateTo('discover');
     }
@@ -1672,6 +1675,7 @@
       persistAccountState();
       updateAccountUI();
       startEngagementSystems();
+      clearDiscoverSearch();
       navigateTo('discover');
     }
 
@@ -1684,11 +1688,39 @@
       navigateTo('account', { replaceHistory: true });
     }
 
+    function clearDiscoverSearch() {
+      state.searchTerm = '';
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = '';
+      renderConcerts();
+    }
+
+    function resetAccountData() {
+      state.account = null;
+      state.users = [];
+      state.profileHistory = { concerts: [], merch: [] };
+      state.userTickets = [];
+      state.merchCarts = {};
+      state.merchCart = {};
+      state.merchPendingOptions = {};
+      localStorage.removeItem('dopamineAccount');
+      localStorage.removeItem('dopamineUsers');
+      localStorage.removeItem('dopamineProfileHistory');
+      localStorage.removeItem('dopamineTickets');
+      localStorage.removeItem('dopamineMerchCarts');
+      stopEngagementSystems();
+      clearDiscoverSearch();
+      updateAccountUI();
+      showAccountChoices();
+      showToast('Account reset.', 'info');
+      navigateTo('account', { replaceHistory: true });
+    }
+
     function updateAccountUI() {
       const profileName = document.getElementById('profileName');
       if (profileName) profileName.innerText = state.account ? state.account.username : 'Guest';
       const profileCity = document.getElementById('profileCity');
-      if (profileCity) profileCity.innerText = state.account && !state.account.guest ? (state.account.city || '') : '';
+      if (profileCity) profileCity.innerText = state.account && !state.account.guest ? (state.account.city || 'Add city') : '';
     }
 
     function renderProfileIdentityDisplay() {
@@ -1696,6 +1728,7 @@
       if (!holder) return;
       const name = state.account ? state.account.username : 'Guest';
       const city = state.account && !state.account.guest ? (state.account.city || '') : '';
+      const cityLabel = city || 'Add city';
       const editableClass = state.account && !state.account.guest ? 'hover:text-indigo-700 cursor-pointer' : '';
       const editingName = state.profileEditField === 'username';
       const editingCity = state.profileEditField === 'city';
@@ -1716,7 +1749,7 @@
               ${renderProfileCitySuggestions(citySuggestions)}
             </div>
           ` : `
-            ${city || (state.account && !state.account.guest) ? `<div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(city)}</div>` : '<div id="profileCity" class="hidden"></div>'}
+            ${state.account && !state.account.guest ? `<div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(cityLabel)}</div>` : '<div id="profileCity" class="hidden"></div>'}
           `}
         </div>
       `;
@@ -2320,7 +2353,7 @@
 
     function updateQty(delta) {
       const next = state.selectedQty + delta;
-      const maxQty = Math.min(8, state.selectedSection.seatsAvailable);
+      const maxQty = Math.min(50, state.selectedSection.seatsAvailable);
       if (next >= 1 && next <= maxQty) {
         state.selectedQty = next;
         document.getElementById('ticketQtyText').innerText = state.selectedQty;
@@ -2330,7 +2363,7 @@
 
     function updateModalTotals() {
       if (state.selectedSection && state.selectedQty > state.selectedSection.seatsAvailable) {
-        state.selectedQty = Math.max(1, Math.min(8, state.selectedSection.seatsAvailable));
+        state.selectedQty = Math.max(1, Math.min(50, state.selectedSection.seatsAvailable));
         const qtyText = document.getElementById('ticketQtyText');
         if (qtyText) qtyText.innerText = state.selectedQty;
       }
@@ -3011,7 +3044,7 @@
       document.getElementById('merchFrontView').classList.remove('hidden');
       document.getElementById('merchShopView').classList.add('hidden');
       document.getElementById('merchCheckoutView').classList.add('hidden');
-      document.getElementById('merchModalSubtitle').innerText = 'Continue to front of line';
+      document.getElementById('merchModalSubtitle').innerText = 'Continue';
       if (!state.merchPreviewOnly) {
         launchConfetti();
         playWinSound();
@@ -3034,8 +3067,10 @@
         : `<i class="fa-solid fa-bag-shopping"></i> Checkout`;
       document.getElementById('merchTotalPanel').classList.toggle('hidden', state.merchPreviewOnly);
 
-      state.merchCart = { ...(state.merchCarts[state.activeMerchConcert.id] || {}) };
+      state.merchCart = {};
       state.merchPendingOptions = {};
+      state.openMerchMenuKey = '';
+      if (!state.merchPreviewOnly) persistActiveMerchCart();
       normalizeMerchCart();
       state.activeMerchConcert.merch.forEach(item => {
         const stockKey = `${state.activeMerchConcert.id}-${item.id}`;
@@ -3234,12 +3269,12 @@
       const key = `${itemId}-${field}`;
       const isOpen = state.openMerchMenuKey === key;
       return `
-        <div class="relative merch-option-root">
-          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 ${locked ? 'cursor-default text-zinc-300' : 'hover:border-emerald-500 text-white'} rounded-lg px-3 py-2 text-xs font-bold flex items-center justify-between">
+        <div class="relative merch-option-root inline-block max-w-full">
+          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="min-w-[4.5rem] max-w-full bg-zinc-900 border border-zinc-800 ${locked ? 'cursor-default text-zinc-300' : 'hover:border-emerald-500 text-white'} rounded-lg px-3 py-2 text-xs font-bold inline-flex items-center justify-between gap-2">
             <span id="merchOptionLabel-${itemId}-${field}">${selected || placeholder}</span>
-            ${locked ? '<span class="text-[10px] text-zinc-500">Fixed</span>' : '<i class="fa-solid fa-chevron-down text-emerald-400 text-[10px]"></i>'}
+            ${locked ? '' : '<i class="fa-solid fa-chevron-down text-emerald-400 text-[10px]"></i>'}
           </button>
-          <div id="merchOptionMenu-${itemId}-${field}" data-merch-option-menu data-item-id="${itemId}" data-field="${field}" data-placeholder="${placeholder}" class="${isOpen && !locked ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
+          <div id="merchOptionMenu-${itemId}-${field}" data-merch-option-menu data-item-id="${itemId}" data-field="${field}" data-placeholder="${placeholder}" class="${isOpen && !locked ? '' : 'hidden'} merch-option-menu absolute left-0 top-[calc(100%+6px)] z-40 min-w-full w-max max-w-48 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
             ${options.map(option => `
               <button type="button" data-option-value="${escapeHtml(option)}" onclick="selectMerchOption('${itemId}', '${field}', '${option.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-zinc-100 hover:bg-emerald-500/15 flex items-center justify-between ${selected === option ? 'bg-emerald-500/10' : ''}">
                 <span>${option}</span><i class="merch-option-check fa-solid fa-check text-emerald-400 ${selected === option ? '' : 'hidden'}"></i>
@@ -3279,7 +3314,7 @@
         const stock = state.merchStock[`${state.activeMerchConcert.id}-${item.id}`] || 3;
         const isCustomizable = Array.isArray(item.sizes) && item.sizes.length > 0 && !state.merchPreviewOnly;
         const controls = isCustomizable ? `
-          <div class="mt-3 grid grid-cols-2 gap-2">
+          <div class="mt-3 flex flex-wrap items-start gap-2">
             ${renderMerchOptionDropdown(item.id, 'size', getMerchSizeOptions(item.id), 'Size')}
             ${renderMerchOptionDropdown(item.id, 'color', getMerchColorOptions(item.id), 'Color')}
           </div>
