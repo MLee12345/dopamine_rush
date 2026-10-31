@@ -67,6 +67,24 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #3f3f46;
     }
+    .scroll-on-demand {
+      scrollbar-width: none;
+    }
+    .scroll-on-demand:hover,
+    .scroll-on-demand:focus-within,
+    .scroll-on-demand.is-scrolling {
+      scrollbar-width: thin;
+    }
+    .scroll-on-demand::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+    .scroll-on-demand:hover::-webkit-scrollbar,
+    .scroll-on-demand:focus-within::-webkit-scrollbar,
+    .scroll-on-demand.is-scrolling::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
 
     /* Standard sleek hover without infinite pulsing */
     .concert-card {
@@ -445,7 +463,7 @@
         <div>
           <div id="profileIdentity" class="space-y-1">
             <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold text-zinc-950 hover:text-indigo-700 cursor-pointer">Guest</h2>
-            <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 hover:text-indigo-700 cursor-pointer">Choose your city</div>
+            <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 hover:text-indigo-700 cursor-pointer"></div>
           </div>
           <p class="text-sm text-zinc-500 mt-2">Concerts attended, ticket history, and merch purchases.</p>
         </div>
@@ -741,14 +759,9 @@
 
       <!-- VIEW B: EMBEDDED SHOPPING AREA (Triggered when line position reaches front) -->
       <div id="merchShopView" class="hidden p-6 space-y-5">
-        
-        <div class="flex items-center justify-between bg-emerald-950/40 border border-emerald-500/30 p-3 rounded-xl text-xs text-emerald-300">
-          <span id="merchShopStatus"><i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> Booth preview unlocked.</span>
-          <span id="merchTimerText" class="hidden font-black text-amber-300">00:20</span>
-        </div>
 
         <!-- Merch Items Scrollable Grid -->
-        <div id="merchItemsList" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+        <div id="merchItemsList" onscroll="markScrollIntent(this)" class="space-y-3 max-h-72 overflow-y-auto pr-1 scroll-on-demand">
           <!-- Merch items dynamic HTML -->
         </div>
 
@@ -1681,34 +1694,35 @@
       const profileName = document.getElementById('profileName');
       if (profileName) profileName.innerText = state.account ? state.account.username : 'Guest';
       const profileCity = document.getElementById('profileCity');
-      if (profileCity) profileCity.innerText = state.account?.city || 'Choose your city';
+      if (profileCity) profileCity.innerText = state.account && !state.account.guest ? (state.account.city || '') : '';
     }
 
     function renderProfileIdentityDisplay() {
       const holder = document.getElementById('profileIdentity');
       if (!holder) return;
       const name = state.account ? state.account.username : 'Guest';
-      const city = state.account?.city || 'Choose your city';
+      const city = state.account && !state.account.guest ? (state.account.city || '') : '';
       const editableClass = state.account && !state.account.guest ? 'hover:text-indigo-700 cursor-pointer' : '';
       const editingName = state.profileEditField === 'username';
       const editingCity = state.profileEditField === 'city';
-      const citySuggestions = editingCity ? getCityOptions(state.account?.city || '').slice(0, 8) : [];
+      const cityValue = state.account?.city || '';
+      const citySuggestions = editingCity && cityValue.trim() ? getCityOptions(cityValue).slice(0, 8) : [];
       holder.innerHTML = `
         <div class="relative">
           ${editingName ? `
-            <input id="profileEditInput" value="${escapeHtml(name)}" onkeydown="handleProfileEditKey(event, 'username')" onblur="saveProfileEdit('username')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-2xl font-extrabold leading-tight text-zinc-950 focus:outline-none focus:border-indigo-600" style="width:${Math.max(5, name.length)}ch">
+            <input id="profileEditInput" value="${escapeHtml(name)}" onkeydown="handleProfileEditKey(event, 'username')" onblur="saveProfileEdit('username')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-2xl font-extrabold leading-tight text-zinc-950 focus:outline-none focus:border-indigo-600" style="width:${Math.max(10, name.length + 4)}ch">
           ` : `
             <h2 id="profileName" onclick="beginProfileEdit('username')" class="inline-block text-2xl font-extrabold leading-tight text-zinc-950 ${editableClass}">${escapeHtml(name)}</h2>
           `}
         </div>
         <div class="relative inline-block max-w-xs">
           ${editingCity ? `
-            <input id="profileEditInput" value="${escapeHtml(state.account?.city || '')}" oninput="handleProfileEditInput('city', this.value)" onkeydown="handleProfileEditKey(event, 'city')" onblur="saveProfileEdit('city')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-sm leading-normal text-zinc-700 focus:outline-none focus:border-indigo-600" style="width:${Math.max(14, (state.account?.city || 'Choose your city').length)}ch">
+            <input id="profileEditInput" value="${escapeHtml(cityValue)}" oninput="handleProfileEditInput('city', this.value)" onkeydown="handleProfileEditKey(event, 'city')" onblur="saveProfileEdit('city')" class="inline-block max-w-full rounded-lg border border-indigo-300 bg-indigo-50 px-1 py-0 text-sm leading-normal text-zinc-700 focus:outline-none focus:border-indigo-600" style="width:${Math.max(18, cityValue.length + 4)}ch">
             <div id="profileCitySuggestions" class="${citySuggestions.length ? '' : 'hidden'} absolute left-0 min-w-56 top-[calc(100%+6px)] z-30 rounded-xl border border-indigo-200 bg-white p-1 shadow-xl">
               ${renderProfileCitySuggestions(citySuggestions)}
             </div>
           ` : `
-            <div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(city)}</div>
+            ${city || (state.account && !state.account.guest) ? `<div id="profileCity" onclick="beginProfileEdit('city')" class="text-sm text-zinc-500 ${editableClass}">${escapeHtml(city)}</div>` : '<div id="profileCity" class="hidden"></div>'}
           `}
         </div>
       `;
@@ -1729,7 +1743,7 @@
         : [];
       const cities = [...new Set([...Object.values(VENUES).map(venue => venue.city), ...WORLD_CITY_OPTIONS, ...timeZoneCities])].sort();
       const cleanQuery = query.trim().toLowerCase();
-      if (!cleanQuery) return cities;
+      if (!cleanQuery) return [];
       return cities.filter(city => city.toLowerCase().includes(cleanQuery));
     }
 
@@ -1747,7 +1761,7 @@
       menu.innerHTML = renderProfileCitySuggestions(suggestions);
       menu.classList.toggle('hidden', !suggestions.length);
       const input = document.getElementById('profileEditInput');
-      if (input) input.style.width = `${Math.max(14, value.length || 14)}ch`;
+      if (input) input.style.width = `${Math.max(18, value.length + 4)}ch`;
     }
 
     function renderProfileCitySuggestions(suggestions) {
@@ -2878,7 +2892,7 @@
       state.activeMerchConcert = CONCERTS.find(c => c.id === concertId);
       state.merchPreviewOnly = previewOnly;
       document.getElementById('merchModalArtist').innerText = `${state.activeMerchConcert.artist} Official Merch`;
-      document.getElementById('merchModalSubtitle').innerText = previewOnly ? 'Preview only' : 'Keep clicking to unlock checkout';
+      document.getElementById('merchModalSubtitle').innerText = previewOnly ? 'Preview only' : 'Pick your merch';
 
       // 1. Randomly select population level with weighted probability
       state.queuePopulationLevel = selectWeightedPopulation();
@@ -3019,9 +3033,7 @@
       document.getElementById('merchFrontView').classList.add('hidden');
       document.getElementById('merchShopView').classList.remove('hidden');
       document.getElementById('merchCheckoutView').classList.add('hidden');
-      document.getElementById('merchShopStatus').innerHTML = state.merchPreviewOnly
-        ? `<i class="fa-solid fa-eye mr-1 text-emerald-400"></i> Preview`
-        : `<i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> Pick merch`;
+      document.getElementById('merchModalSubtitle').innerText = state.merchPreviewOnly ? 'Preview only' : 'Pick your merch';
       document.getElementById('merchCheckoutButton').innerHTML = state.merchPreviewOnly
         ? `<i class="fa-solid fa-xmark"></i> Close Preview`
         : `<i class="fa-solid fa-bag-shopping"></i> Checkout`;
@@ -3090,6 +3102,12 @@
       state.merchInventoryTimer = null;
     }
 
+    function markScrollIntent(element) {
+      element.classList.add('is-scrolling');
+      clearTimeout(element._scrollIntentTimer);
+      element._scrollIntentTimer = setTimeout(() => element.classList.remove('is-scrolling'), 900);
+    }
+
     function makeMerchCartKey(itemId, size, color) {
       return `${itemId}__${encodeURIComponent(size)}__${encodeURIComponent(color)}`;
     }
@@ -3130,7 +3148,33 @@
         .reduce((sum, entry) => sum + entry.qty, 0);
     }
 
+    function getMerchItem(itemId) {
+      return state.activeMerchConcert?.merch.find(item => item.id === itemId);
+    }
+
+    function getMerchSizeOptions(itemId) {
+      const item = getMerchItem(itemId);
+      return Array.isArray(item?.sizes) && item.sizes.length ? item.sizes : ['One size'];
+    }
+
+    function getMerchColorOptions(itemId) {
+      return ['Black', 'Cream', 'Tour green', 'Washed violet'];
+    }
+
+    function ensureMerchDefaults(item) {
+      if (!item || state.merchPreviewOnly) return;
+      const current = state.merchPendingOptions[item.id] || {};
+      const sizes = getMerchSizeOptions(item.id);
+      const colors = getMerchColorOptions(item.id);
+      state.merchPendingOptions[item.id] = {
+        ...current,
+        size: current.size || (sizes.length === 1 ? sizes[0] : ''),
+        color: current.color || (colors.length === 1 ? colors[0] : '')
+      };
+    }
+
     function getSelectedMerchOptions(itemId, requireSelection = false) {
+      ensureMerchDefaults(getMerchItem(itemId));
       const options = state.merchPendingOptions[itemId] || {};
       const size = options.size || '';
       const color = options.color || '';
@@ -3142,6 +3186,12 @@
     }
 
     function toggleMerchOptionMenu(itemId, field) {
+      const options = field === 'size' ? getMerchSizeOptions(itemId) : getMerchColorOptions(itemId);
+      if (options.length <= 1) {
+        const label = field === 'size' ? 'Only one size is available for this item.' : 'Only one color is available for this item.';
+        showToast(label, 'info');
+        return;
+      }
       const key = `${itemId}-${field}`;
       state.openMerchMenuKey = state.openMerchMenuKey === key ? '' : key;
       syncMerchOptionMenus();
@@ -3181,15 +3231,16 @@
 
     function renderMerchOptionDropdown(itemId, field, options, placeholder) {
       const selected = state.merchPendingOptions[itemId]?.[field] || '';
+      const locked = options.length <= 1;
       const key = `${itemId}-${field}`;
       const isOpen = state.openMerchMenuKey === key;
       return `
         <div class="relative merch-option-root">
-          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 hover:border-emerald-500 rounded-lg px-3 py-2 text-xs font-bold text-white flex items-center justify-between">
+          <button type="button" onclick="toggleMerchOptionMenu('${itemId}', '${field}')" class="w-full bg-zinc-900 border border-zinc-800 ${locked ? 'cursor-default text-zinc-400' : 'hover:border-emerald-500 text-white'} rounded-lg px-3 py-2 text-xs font-bold flex items-center justify-between">
             <span id="merchOptionLabel-${itemId}-${field}">${selected || placeholder}</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-emerald-400"></i>
+            <i class="fa-solid ${locked ? 'fa-lock text-zinc-500' : 'fa-chevron-down text-emerald-400'} text-[10px]"></i>
           </button>
-          <div id="merchOptionMenu-${itemId}-${field}" data-merch-option-menu data-item-id="${itemId}" data-field="${field}" data-placeholder="${placeholder}" class="${isOpen ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
+          <div id="merchOptionMenu-${itemId}-${field}" data-merch-option-menu data-item-id="${itemId}" data-field="${field}" data-placeholder="${placeholder}" class="${isOpen && !locked ? '' : 'hidden'} merch-option-menu absolute left-0 right-0 top-[calc(100%+6px)] z-40 bg-zinc-950 border border-emerald-500/30 rounded-xl p-1 shadow-2xl shadow-black/50">
             ${options.map(option => `
               <button type="button" data-option-value="${escapeHtml(option)}" onclick="selectMerchOption('${itemId}', '${field}', '${option.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-zinc-100 hover:bg-emerald-500/15 flex items-center justify-between ${selected === option ? 'bg-emerald-500/10' : ''}">
                 <span>${option}</span><i class="merch-option-check fa-solid fa-check text-emerald-400 ${selected === option ? '' : 'hidden'}"></i>
@@ -3221,6 +3272,7 @@
       const activeRowIds = new Set();
 
       state.activeMerchConcert.merch.forEach(item => {
+        ensureMerchDefaults(item);
         const rowId = `merchRow-${item.id}`;
         activeRowIds.add(rowId);
         const itemEntries = getMerchCartEntries().filter(entry => entry.itemId === item.id);
@@ -3229,8 +3281,8 @@
         const isCustomizable = Array.isArray(item.sizes) && item.sizes.length > 0 && !state.merchPreviewOnly;
         const controls = isCustomizable ? `
           <div class="mt-3 grid grid-cols-2 gap-2">
-            ${renderMerchOptionDropdown(item.id, 'size', item.sizes, 'Size')}
-            ${renderMerchOptionDropdown(item.id, 'color', ['Black', 'Cream', 'Tour green', 'Washed violet'], 'Color')}
+            ${renderMerchOptionDropdown(item.id, 'size', getMerchSizeOptions(item.id), 'Size')}
+            ${renderMerchOptionDropdown(item.id, 'color', getMerchColorOptions(item.id), 'Color')}
           </div>
         ` : '';
         const variants = itemEntries.length ? `
