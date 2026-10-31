@@ -392,6 +392,77 @@
       </div>
     </section>
 
+    <!-- PAGE 0B: ABOUT / PRIVACY -->
+    <section id="page-about" class="hidden h-[calc(100vh-176px)] min-h-0 overflow-hidden">
+      <div class="h-full bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden grid grid-rows-[auto_1fr]">
+        <div class="p-5 border-b border-zinc-200 flex items-center justify-between gap-4">
+          <div>
+            <button onclick="navigateTo('discover')" class="text-zinc-500 hover:text-indigo-700 text-xs flex items-center gap-1 mb-2">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <h1 class="text-2xl font-black text-zinc-950">About DopamineLive</h1>
+            <p class="text-sm text-zinc-500">A simulated ticket, wallet, and merch marketplace for high-demand live events.</p>
+          </div>
+          <div class="hidden sm:flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+            <i class="fa-solid fa-circle-info"></i> Demo only. No real money is spent.
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] min-h-0">
+          <div class="p-5 bg-indigo-700 text-white space-y-4">
+            <div class="rounded-2xl bg-white/10 border border-white/15 p-4">
+              <div class="text-xs font-black uppercase tracking-wider text-emerald-200 mb-2">TL;DR</div>
+              <p class="text-sm leading-relaxed text-indigo-50">
+                DopamineLive is a local simulation. It stores demo account names, virtual tickets, virtual merch, wallet balance, and profile history on this device so the experience can persist between reloads.
+              </p>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-xl bg-white/10 border border-white/15 p-3">
+                <i class="fa-solid fa-ticket text-emerald-200"></i>
+                <div class="text-[10px] font-bold mt-1">Fake tickets</div>
+              </div>
+              <div class="rounded-xl bg-white/10 border border-white/15 p-3">
+                <i class="fa-solid fa-wallet text-emerald-200"></i>
+                <div class="text-[10px] font-bold mt-1">Fake wallet</div>
+              </div>
+              <div class="rounded-xl bg-white/10 border border-white/15 p-3">
+                <i class="fa-solid fa-lock text-emerald-200"></i>
+                <div class="text-[10px] font-bold mt-1">Local data</div>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-emerald-300 text-zinc-950 p-4 text-sm font-black">
+              Purchases, discounts, queues, wallet charges, and checkout timers are all simulated. No external checkout occurs.
+            </div>
+          </div>
+          <div class="min-h-0 overflow-y-auto p-5 space-y-4 text-sm text-zinc-600">
+            <section class="space-y-2">
+              <h2 class="text-lg font-black text-zinc-950">Privacy Details</h2>
+              <p>DopamineLive keeps this prototype self-contained. The app uses your browser's local storage to remember the current account, guest session, saved virtual passes, merch cart state, profile history, wallet balance, and daily wheel status.</p>
+            </section>
+            <section class="space-y-2">
+              <h3 class="font-black text-zinc-950">Account and Guest Separation</h3>
+              <p>Guest mode and member mode use separate storage areas. A guest wallet, pass list, merch history, and deal state are not shared with a signed-in member account, and each username gets its own saved demo data.</p>
+            </section>
+            <section class="space-y-2">
+              <h3 class="font-black text-zinc-950">What Is Stored</h3>
+              <p>The app may store your demo username, demo password, editable display city, simulated ticket wallet, concerts attended, merch collected, saved cart data, virtual wallet amount, and active daily deal. This information stays on this device.</p>
+            </section>
+            <section class="space-y-2">
+              <h3 class="font-black text-zinc-950">What Is Not Happening</h3>
+              <p>No payment processor is contacted, no real tickets are issued, no venue inventory is reserved, and no real money is transferred. Checkout screens, scarcity warnings, queue progress, rewards, and taxes are interface simulations.</p>
+            </section>
+            <section class="space-y-2">
+              <h3 class="font-black text-zinc-950">Reset and Logout</h3>
+              <p>Logout returns you to the starting screen while keeping that account's local demo data. Reset Account deletes the current guest or member account's saved demo tickets, merch history, cart, wallet, and daily deal while keeping the account session open.</p>
+            </section>
+            <section class="space-y-2">
+              <h3 class="font-black text-zinc-950">Control</h3>
+              <p>You can change your profile name and city from the profile area when signed in. You can also reset the active session's data from the footer. Browser storage controls can clear all local prototype data from the device.</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- PAGE 1: DISCOVER / CONCERT CATALOGUE -->
     <section id="page-discover" class="space-y-8">
       
@@ -864,36 +935,29 @@
         <span>— Verified Stage & Venue Ticket Infrastructure</span>
       </div>
       <div class="flex items-center space-x-4 text-zinc-400">
-        <button onclick="openAboutModal()" class="hover:text-white font-semibold">About</button>
+        <button onclick="navigateTo('about')" class="hover:text-white font-semibold">About</button>
         <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Verified Seats</span>
         <span><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Instant Stage Doors</span>
-        <button onclick="resetAccountData()" class="hover:text-rose-300 font-semibold">Reset Account</button>
+        <button onclick="openResetAccountWarning()" class="hover:text-rose-300 font-semibold">Reset Account</button>
       </div>
     </div>
   </footer>
 
-  <div id="aboutModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-zinc-200 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
-      <div class="p-5 border-b border-zinc-200 flex items-center justify-between">
+  <div id="resetAccountModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-zinc-200 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-zinc-200">
         <div>
-          <h3 class="text-xl font-black text-zinc-950">About DopamineLive</h3>
-          <p class="text-sm text-zinc-500">A simulated live-ticket and merch marketplace.</p>
+          <h3 class="text-xl font-black text-zinc-950">Reset this account?</h3>
+          <p class="text-sm text-zinc-500 mt-1">This deletes saved demo data for the current guest or member session only.</p>
         </div>
-        <button onclick="closeAboutModal()" class="w-9 h-9 rounded-lg bg-zinc-100 text-zinc-600 hover:text-zinc-950 grid place-items-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
       </div>
-      <div class="p-6 grid gap-4 text-sm text-zinc-600">
-        <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4">
-          <div class="font-black text-zinc-950 mb-1">What it does</div>
-          DopamineLive lets you browse rotating concert inventory, choose simulated seats, collect virtual passes, and unlock artist merch queues.
+      <div class="p-5 space-y-4">
+        <div class="rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-800">
+          Reset removes virtual tickets, concert history, merch purchases, saved merch cart, wallet balance, and daily wheel deal for this account. You will stay logged in.
         </div>
-        <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
-          <div class="font-black text-indigo-950 mb-1">Why it feels intense</div>
-          The app uses time limits, changing inventory, rewards, and progress feedback to model how high-demand ticket drops can feel.
-        </div>
-        <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-4 font-bold text-emerald-900">
-          No real money is spent. Wallets, purchases, tickets, discounts, and merch are all simulated for this demo.
+        <div class="flex gap-2 justify-end">
+          <button onclick="closeResetAccountWarning()" class="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-bold">Cancel</button>
+          <button onclick="resetAccountData()" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-sm font-black">Reset data</button>
         </div>
       </div>
     </div>
@@ -1395,16 +1459,28 @@
       }
     }
 
-    function loadStoredTickets() {
-      return readJsonStorage('dopamineTickets', []).filter(ticket => ticket.ticketId !== 't-1001');
+    const INITIAL_ACCOUNT = readJsonStorage('dopamineAccount', null);
+
+    function accountStorageScope(account = INITIAL_ACCOUNT) {
+      if (!account || account.guest) return 'guest';
+      return `user-${String(account.username || 'member').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    }
+
+    function scopedStorageKey(base, account) {
+      const activeAccount = arguments.length > 1 ? account : state.account;
+      return `${base}:${accountStorageScope(activeAccount)}`;
+    }
+
+    function loadStoredTickets(account = INITIAL_ACCOUNT) {
+      return readJsonStorage(scopedStorageKey('dopamineTickets', account), []).filter(ticket => ticket.ticketId !== 't-1001');
     }
 
     function persistTickets() {
-      localStorage.setItem('dopamineTickets', JSON.stringify(state.userTickets));
+      localStorage.setItem(scopedStorageKey('dopamineTickets'), JSON.stringify(state.userTickets));
     }
 
-    function loadStoredMerchCarts() {
-      return readJsonStorage('dopamineMerchCarts', {});
+    function loadStoredMerchCarts(account = INITIAL_ACCOUNT) {
+      return readJsonStorage(scopedStorageKey('dopamineMerchCarts', account), {});
     }
 
     function persistActiveMerchCart() {
@@ -1413,13 +1489,35 @@
       const hasItems = Object.keys(state.merchCart).length > 0;
       if (hasItems) state.merchCarts[concertId] = state.merchCart;
       else delete state.merchCarts[concertId];
-      localStorage.setItem('dopamineMerchCarts', JSON.stringify(state.merchCarts));
+      localStorage.setItem(scopedStorageKey('dopamineMerchCarts'), JSON.stringify(state.merchCarts));
     }
 
     function persistAccountState() {
       localStorage.setItem('dopamineAccount', JSON.stringify(state.account));
       localStorage.setItem('dopamineUsers', JSON.stringify(state.users));
-      localStorage.setItem('dopamineProfileHistory', JSON.stringify(state.profileHistory));
+      persistProfileHistory();
+    }
+
+    function persistProfileHistory() {
+      localStorage.setItem(scopedStorageKey('dopamineProfileHistory'), JSON.stringify(state.profileHistory));
+    }
+
+    function loadScopedSessionData(account = state.account) {
+      state.profileHistory = readJsonStorage(scopedStorageKey('dopamineProfileHistory', account), { concerts: [], merch: [] });
+      state.userTickets = loadStoredTickets(account);
+      state.merchCarts = loadStoredMerchCarts(account);
+      state.merchCart = {};
+      state.merchPendingOptions = {};
+      state.walletBalance = Number(localStorage.getItem(scopedStorageKey('dopamineWallet', account)) || 25);
+      state.discountPct = Number(localStorage.getItem(scopedStorageKey('dopamineDiscount', account)) || 0);
+      state.discountFlat = Number(localStorage.getItem(scopedStorageKey('dopamineDiscountFlat', account)) || 0);
+      state.lastSpinDate = localStorage.getItem(scopedStorageKey('dopamineLastSpin', account)) || '';
+      state.activeDealLabel = localStorage.getItem(scopedStorageKey('dopamineDealLabel', account)) || '';
+      if (state.activeDealLabel === '10% off checkout') {
+        state.activeDealLabel = '';
+        state.discountPct = 0;
+        state.discountFlat = 0;
+      }
     }
 
     function todayKey() {
@@ -1433,9 +1531,9 @@
       filters: { location: 'ALL', date: 'ALL', dateStart: '', dateEnd: '', priceMin: 0, priceMax: 0 },
       accountMode: 'signup',
       users: readJsonStorage('dopamineUsers', []),
-      account: readJsonStorage('dopamineAccount', null),
-      profileHistory: readJsonStorage('dopamineProfileHistory', { concerts: [], merch: [] }),
-      userTickets: loadStoredTickets(),
+      account: INITIAL_ACCOUNT,
+      profileHistory: readJsonStorage(scopedStorageKey('dopamineProfileHistory', INITIAL_ACCOUNT), { concerts: [], merch: [] }),
+      userTickets: loadStoredTickets(INITIAL_ACCOUNT),
       selectedConcert: null,
       selectedSection: null,
       selectedQty: 1,
@@ -1452,7 +1550,7 @@
       merchPreviewOnly: false,
       queueTimer: null,
       merchCart: {},
-      merchCarts: loadStoredMerchCarts(),
+      merchCarts: loadStoredMerchCarts(INITIAL_ACCOUNT),
       merchStock: {},
       merchInventoryTimer: null,
       merchExpiresAt: 0,
@@ -1477,11 +1575,11 @@
       reservationTimer: null,
       reservationExpiresAt: 0,
       inventoryAlerted: {},
-      walletBalance: Number(localStorage.getItem('dopamineWallet') || 25),
-      discountPct: Number(localStorage.getItem('dopamineDiscount') || 0),
-      discountFlat: Number(localStorage.getItem('dopamineDiscountFlat') || 0),
-      lastSpinDate: localStorage.getItem('dopamineLastSpin') || '',
-      activeDealLabel: localStorage.getItem('dopamineDealLabel') === '10% off checkout' ? '' : (localStorage.getItem('dopamineDealLabel') || ''),
+      walletBalance: Number(localStorage.getItem(scopedStorageKey('dopamineWallet', INITIAL_ACCOUNT)) || 25),
+      discountPct: Number(localStorage.getItem(scopedStorageKey('dopamineDiscount', INITIAL_ACCOUNT)) || 0),
+      discountFlat: Number(localStorage.getItem(scopedStorageKey('dopamineDiscountFlat', INITIAL_ACCOUNT)) || 0),
+      lastSpinDate: localStorage.getItem(scopedStorageKey('dopamineLastSpin', INITIAL_ACCOUNT)) || '',
+      activeDealLabel: localStorage.getItem(scopedStorageKey('dopamineDealLabel', INITIAL_ACCOUNT)) === '10% off checkout' ? '' : (localStorage.getItem(scopedStorageKey('dopamineDealLabel', INITIAL_ACCOUNT)) || ''),
       wheelRotation: 0,
       wheelDeals: [],
       wheelCountdownTimer: null,
@@ -1495,12 +1593,12 @@
       previewOscillator: null
     };
     const TAX_RATE = 0.0875;
-    if (localStorage.getItem('dopamineDealLabel') === '10% off checkout') {
+    if (localStorage.getItem(scopedStorageKey('dopamineDealLabel', INITIAL_ACCOUNT)) === '10% off checkout') {
       state.discountPct = 0;
       state.discountFlat = 0;
-      localStorage.removeItem('dopamineDealLabel');
-      localStorage.removeItem('dopamineDiscount');
-      localStorage.removeItem('dopamineDiscountFlat');
+      localStorage.removeItem(scopedStorageKey('dopamineDealLabel', INITIAL_ACCOUNT));
+      localStorage.removeItem(scopedStorageKey('dopamineDiscount', INITIAL_ACCOUNT));
+      localStorage.removeItem(scopedStorageKey('dopamineDiscountFlat', INITIAL_ACCOUNT));
     }
 
     /* ==========================================================================
@@ -1528,7 +1626,7 @@
     };
 
     function navigateTo(tabName, options = {}) {
-      if (!state.account && tabName !== 'account') tabName = 'account';
+      if (!state.account && !['account', 'about'].includes(tabName)) tabName = 'account';
       const previousTab = state.activeTab;
       state.activeTab = tabName;
       if (!options.skipHistory && (options.replaceHistory || previousTab !== tabName || !state.navReady)) {
@@ -1546,6 +1644,7 @@
       
       // Hide all pages
       document.getElementById('page-account').classList.add('hidden');
+      document.getElementById('page-about').classList.add('hidden');
       document.getElementById('page-discover').classList.add('hidden');
       document.getElementById('page-tickets').classList.add('hidden');
       document.getElementById('page-profile').classList.add('hidden');
@@ -1560,6 +1659,8 @@
 
       if (tabName === 'account') {
         document.getElementById('page-account').classList.remove('hidden');
+      } else if (tabName === 'about') {
+        document.getElementById('page-about').classList.remove('hidden');
       } else if (tabName === 'discover') {
         document.getElementById('page-discover').classList.remove('hidden');
         document.getElementById('nav-discover').className = "px-3 py-2 rounded-full text-sm font-semibold transition-colors text-white bg-indigo-700 border border-indigo-700";
@@ -1623,8 +1724,11 @@
       clearAccountError();
       state.users.push({ username, password, city: '' });
       state.account = { username, city: '', guest: false };
+      loadScopedSessionData(state.account);
       persistAccountState();
       updateAccountUI();
+      updateTicketBadge();
+      updateWalletUI();
       startEngagementSystems();
       clearDiscoverSearch();
       showToast(`Welcome, ${username}.`, 'success');
@@ -1634,6 +1738,7 @@
     function showAccountForm(mode) {
       state.accountMode = mode;
       clearAccountError();
+      resetAccountFormFields();
       document.getElementById('accountChoiceView').classList.add('hidden');
       document.getElementById('accountFormView').classList.remove('hidden');
       document.getElementById('accountFormTitle').innerText = mode === 'login' ? 'Log in' : 'Sign up';
@@ -1644,8 +1749,16 @@
 
     function showAccountChoices() {
       clearAccountError();
+      resetAccountFormFields();
       document.getElementById('accountFormView').classList.add('hidden');
       document.getElementById('accountChoiceView').classList.remove('hidden');
+    }
+
+    function resetAccountFormFields() {
+      const username = document.getElementById('accountUsername');
+      const password = document.getElementById('accountPassword');
+      if (username) username.value = '';
+      if (password) password.value = '';
     }
 
     function submitAccountForm() {
@@ -1656,8 +1769,11 @@
       if (!user) return setAccountError('Username or password is incorrect.', 'both');
       clearAccountError();
       state.account = { username: user.username, city: user.city || '', guest: false };
+      loadScopedSessionData(state.account);
       persistAccountState();
       updateAccountUI();
+      updateTicketBadge();
+      updateWalletUI();
       startEngagementSystems();
       clearDiscoverSearch();
       showToast(`Welcome back, ${user.username}.`, 'success');
@@ -1672,8 +1788,11 @@
 
     function skipAccount() {
       state.account = { username: 'Guest', city: '', guest: true };
+      loadScopedSessionData(state.account);
       persistAccountState();
       updateAccountUI();
+      updateTicketBadge();
+      updateWalletUI();
       startEngagementSystems();
       clearDiscoverSearch();
       navigateTo('discover');
@@ -1696,24 +1815,34 @@
     }
 
     function resetAccountData() {
-      state.account = null;
-      state.users = [];
+      const activeAccount = state.account || { username: 'Guest', guest: true };
       state.profileHistory = { concerts: [], merch: [] };
       state.userTickets = [];
       state.merchCarts = {};
       state.merchCart = {};
       state.merchPendingOptions = {};
-      localStorage.removeItem('dopamineAccount');
-      localStorage.removeItem('dopamineUsers');
-      localStorage.removeItem('dopamineProfileHistory');
-      localStorage.removeItem('dopamineTickets');
-      localStorage.removeItem('dopamineMerchCarts');
-      stopEngagementSystems();
+      state.walletBalance = 25;
+      state.discountPct = 0;
+      state.discountFlat = 0;
+      state.lastSpinDate = '';
+      state.activeDealLabel = '';
+      localStorage.removeItem(scopedStorageKey('dopamineProfileHistory', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineTickets', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineMerchCarts', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineWallet', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineDiscount', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineDiscountFlat', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineLastSpin', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineDealLabel', activeAccount));
+      closeResetAccountWarning();
+      persistAccountState();
       clearDiscoverSearch();
       updateAccountUI();
-      showAccountChoices();
-      showToast('Account reset.', 'info');
-      navigateTo('account', { replaceHistory: true });
+      updateTicketBadge();
+      updateWalletUI();
+      if (state.activeTab === 'profile') renderProfilePage();
+      if (state.activeTab === 'tickets') renderTicketsView();
+      showToast('Saved data reset for this account.', 'info');
     }
 
     function updateAccountUI() {
@@ -3620,11 +3749,11 @@
     ];
 
     function updateWalletUI() {
-      localStorage.setItem('dopamineWallet', state.walletBalance.toFixed(0));
-      localStorage.setItem('dopamineDiscount', state.discountPct.toString());
-      localStorage.setItem('dopamineDiscountFlat', state.discountFlat.toString());
-      localStorage.setItem('dopamineLastSpin', state.lastSpinDate);
-      localStorage.setItem('dopamineDealLabel', state.activeDealLabel);
+      localStorage.setItem(scopedStorageKey('dopamineWallet'), state.walletBalance.toFixed(0));
+      localStorage.setItem(scopedStorageKey('dopamineDiscount'), state.discountPct.toString());
+      localStorage.setItem(scopedStorageKey('dopamineDiscountFlat'), state.discountFlat.toString());
+      localStorage.setItem(scopedStorageKey('dopamineLastSpin'), state.lastSpinDate);
+      localStorage.setItem(scopedStorageKey('dopamineDealLabel'), state.activeDealLabel);
       const walletText = `$${state.walletBalance.toFixed(0)}`;
       document.getElementById('walletBalanceText').innerText = walletText;
       const modalBalance = document.getElementById('walletModalBalance');
@@ -3680,12 +3809,12 @@
       state.wheelCountdownTimer = null;
     }
 
-    function openAboutModal() {
-      document.getElementById('aboutModal').classList.remove('hidden');
+    function openResetAccountWarning() {
+      document.getElementById('resetAccountModal').classList.remove('hidden');
     }
 
-    function closeAboutModal() {
-      document.getElementById('aboutModal').classList.add('hidden');
+    function closeResetAccountWarning() {
+      document.getElementById('resetAccountModal').classList.add('hidden');
     }
 
     function startEngagementSystems() {
