@@ -483,7 +483,7 @@
 
       <!-- Marketplace Filters -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-200 pb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.35fr_1.3fr_1.08fr_0.68fr] gap-2 w-full lg:max-w-5xl items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_0.95fr_1.28fr_1.45fr_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
           <div class="relative">
             <button id="locationFilterButton" onclick="toggleFilterMenu('location')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
               <span>Location</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
@@ -491,14 +491,13 @@
             <div id="locationFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
           <div class="relative">
-            <div class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex flex-col justify-center">
-              <span class="text-[10px] uppercase tracking-wider text-indigo-700">Date</span>
-              <span class="grid grid-cols-2 gap-1">
-                <button type="button" onclick="openDatePicker('dateStartFilter')" class="min-w-0 flex items-center justify-between gap-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
-                <button type="button" onclick="openDatePicker('dateEndFilter')" class="min-w-0 flex items-center justify-between gap-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+            <div class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex items-center">
+              <span class="grid grid-cols-2 gap-1 w-full">
+                <button type="button" onclick="openDatePicker('dateStartFilter')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button type="button" onclick="openDatePicker('dateEndFilter')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
               </span>
-              <input id="dateStartFilter" type="date" onchange="handleDateFilter('start', this.value)" class="absolute w-px h-px opacity-0 pointer-events-none">
-              <input id="dateEndFilter" type="date" onchange="handleDateFilter('end', this.value)" class="absolute w-px h-px opacity-0 pointer-events-none">
+              <input id="dateStartFilter" type="date" onchange="handleDateFilter('start', this.value)" tabindex="-1" aria-hidden="true" class="absolute w-px h-px opacity-0 pointer-events-none">
+              <input id="dateEndFilter" type="date" onchange="handleDateFilter('end', this.value)" tabindex="-1" aria-hidden="true" class="absolute w-px h-px opacity-0 pointer-events-none">
             </div>
           </div>
           <div class="h-full min-h-[58px] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950">
@@ -512,7 +511,7 @@
           </div>
           <div class="relative">
             <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
-              <span class="truncate">Sort by</span><i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i>
+              <span class="whitespace-nowrap">Sort by</span><i class="fa-solid fa-arrow-down-wide-short text-[10px] shrink-0"></i>
             </button>
             <div id="sortFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
@@ -728,18 +727,9 @@
         <!-- Interactive Visualizer Canvas -->
         <canvas id="stageCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
 
-        <!-- Overlay Visualizer FX HUD -->
-        <div class="relative z-10 p-4 sm:p-6 flex justify-between items-start pointer-events-none">
-          <div class="bg-zinc-950/75 backdrop-blur-md border border-zinc-800 p-3 rounded-xl max-w-xs space-y-1">
-            <div class="text-[10px] text-emerald-400 font-mono tracking-wider">OFFICIAL PREVIEW</div>
-            <div id="stageTrackTitle" class="text-xs font-bold text-white truncate">Track 01 - Cybernetics (Live Mix)</div>
-            <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mt-1">
-              <div id="trackProgress" class="bg-emerald-400 h-full w-2/3 transition-all duration-300"></div>
-            </div>
-          </div>
-
-          <!-- Artist Playlist Controls -->
-          <div id="stagePlaylistControls" class="pointer-events-auto flex flex-col gap-1.5 bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl min-w-48">
+        <!-- Artist Playlist Controls -->
+        <div class="relative z-10 p-4 sm:p-6 flex justify-end items-start pointer-events-none h-full">
+          <div id="stagePlaylistControls" class="pointer-events-auto ml-auto flex max-h-full w-full max-w-xs flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
             <!-- Dynamic playlist buttons -->
           </div>
         </div>
@@ -750,8 +740,9 @@
             <button id="stageAudioBtn" onclick="toggleStageAudio()" class="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all">
               <i class="fa-solid fa-pause" id="audioIcon"></i>
             </button>
-            <div>
-              <div class="text-xs font-semibold text-white" id="camStatusLabel">Playlist: Track 1</div>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold text-white truncate" id="stageTrackTitle">Track 01</div>
+              <div class="text-[11px] font-semibold text-zinc-300" id="camStatusLabel">Playlist: Track 1</div>
               <div class="text-[11px] text-zinc-400 flex items-center gap-1">
                 <i class="fa-solid fa-users text-emerald-400"></i> <span id="stageViewerCount">14,289</span> tuning in
               </div>
@@ -759,8 +750,8 @@
           </div>
 
           <div class="flex items-center space-x-2">
-            <button onclick="openMerchQueueForCurrentStage()" class="px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
-              <i class="fa-solid fa-bag-shopping text-emerald-400"></i> Merch Queue
+            <button onclick="openMerchQueueForCurrentStage()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+              <i class="fa-solid fa-bag-shopping"></i> Merch Queue
             </button>
           </div>
         </div>
@@ -1598,6 +1589,7 @@
       queueClicksNeeded: 12,
       stageCam: 'Main Stage',
       stageTrackIndex: 0,
+      stageTrackTimer: null,
       ticketUrgencyTimer: null,
       ticketInventoryTimer: null,
       reservationTimer: null,
@@ -1624,6 +1616,7 @@
       previewTrackIndex: -1,
       previewContext: '',
       stageEnded: false,
+      stageSessionTimer: null,
       artistPreviewCache: new Map()
     };
     const TAX_RATE = 0.0875;
@@ -1875,6 +1868,7 @@
       localStorage.removeItem(scopedStorageKey('dopamineDiscountFlat', activeAccount));
       localStorage.removeItem(scopedStorageKey('dopamineLastSpin', activeAccount));
       localStorage.removeItem(scopedStorageKey('dopamineDealLabel', activeAccount));
+      localStorage.removeItem(scopedStorageKey('dopamineStageSessions', activeAccount));
       closeResetAccountWarning();
       persistAccountState();
       clearDiscoverSearch();
@@ -2103,7 +2097,7 @@
     function selectSortOption(value, label) {
       state.sortBy = value;
       const button = document.getElementById('sortFilterButton');
-      if (button) button.querySelector('span').innerText = value === 'recommended' ? 'Sort by' : label.replace('Date: ', '').replace('Price: ', '');
+      if (button) button.querySelector('span').innerText = value === 'recommended' ? 'Sort by' : label;
       const menu = document.getElementById('sortFilterMenu');
       if (menu) menu.classList.add('hidden');
       initFilters();
@@ -2373,6 +2367,60 @@
       ];
     }
 
+    function getTrackDuration(track) {
+      return Math.max(30, Number(track?.duration) || 30);
+    }
+
+    function getConcertDurationSeconds(concert) {
+      const tracks = concert?.previewTracks || [];
+      if (!tracks.length) return 0;
+      return tracks.reduce((sum, track) => sum + getTrackDuration(track), 0);
+    }
+
+    function formatClock(seconds) {
+      const safeSeconds = Math.max(0, Math.floor(seconds || 0));
+      const minutes = Math.floor(safeSeconds / 60);
+      const remaining = safeSeconds % 60;
+      return `${minutes}:${String(remaining).padStart(2, '0')}`;
+    }
+
+    function getStageSessions() {
+      return readJsonStorage(scopedStorageKey('dopamineStageSessions'), {});
+    }
+
+    function persistStageSessions(sessions) {
+      localStorage.setItem(scopedStorageKey('dopamineStageSessions'), JSON.stringify(sessions));
+    }
+
+    function getStageSession(concertId) {
+      return getStageSessions()[concertId] || null;
+    }
+
+    function saveStageSession(concertId, session) {
+      const sessions = getStageSessions();
+      sessions[concertId] = session;
+      persistStageSessions(sessions);
+    }
+
+    function clearStageSession(concertId) {
+      const sessions = getStageSessions();
+      delete sessions[concertId];
+      persistStageSessions(sessions);
+    }
+
+    function expireCompletedStageSessions() {
+      const sessions = getStageSessions();
+      let changed = false;
+      Object.entries(sessions).forEach(([concertId, session]) => {
+        if (session.endsAt > Date.now()) return;
+        const concert = CONCERTS.find(item => item.id === concertId);
+        if (concert) concert.isEnded = true;
+        delete sessions[concertId];
+        changed = true;
+      });
+      if (changed) persistStageSessions(sessions);
+    }
+
     function normalizeArtistName(value) {
       return String(value || '')
         .normalize('NFD')
@@ -2413,8 +2461,10 @@
               artistName: result.artist?.name || matchedArtist.name || concert.artist,
               collectionName: result.album?.title || '',
               previewUrl: result.preview || '',
+              streamUrl: result.preview || '',
               trackViewUrl: result.link || matchedArtist.link || '',
-              artworkUrl: result.album?.cover_medium || result.album?.cover_small || matchedArtist.picture_medium || ''
+              artworkUrl: result.album?.cover_medium || result.album?.cover_small || matchedArtist.picture_medium || '',
+              duration: Number(result.duration) || 30
             });
           });
           concert.previewAvailable = uniqueTracks.length >= 3;
@@ -2547,7 +2597,7 @@
 
     async function playPreviewMusic(idx = 0, options = {}) {
       const track = state.selectedConcert?.previewTracks?.[idx];
-      if (!track?.previewUrl) {
+      if (!track?.previewUrl && !track?.streamUrl) {
         showToast('This artist does not have an official preview available.', 'info');
         return false;
       }
@@ -2555,7 +2605,7 @@
         state.previewAudio.pause();
         state.previewAudio.currentTime = 0;
       }
-      const audio = new Audio(track.previewUrl);
+      const audio = new Audio(track.streamUrl || track.previewUrl);
       audio.preload = 'none';
       audio.volume = 0.72;
       state.previewAudio = audio;
@@ -2569,10 +2619,9 @@
         if (icon) icon.className = 'fa-solid fa-pause';
         audio.addEventListener('ended', () => {
           if (state.previewAudio !== audio) return;
-          if (options.advanceStage && idx < (state.selectedConcert?.previewTracks?.length || 0) - 1) {
-            playStageTrack(idx + 1);
-          } else if (options.advanceStage) {
-            finishStagePlaylist();
+          if (options.advanceStage) {
+            isAudioPlaying = true;
+            updatePreviewPlaybackUI();
           } else {
             stopPreviewMusic();
           }
@@ -2593,6 +2642,14 @@
     }
 
     function stopPreviewMusic() {
+      if (state.stageSessionTimer) {
+        clearInterval(state.stageSessionTimer);
+        state.stageSessionTimer = null;
+      }
+      if (state.stageTrackTimer) {
+        clearTimeout(state.stageTrackTimer);
+        state.stageTrackTimer = null;
+      }
       if (state.previewAudio) {
         state.previewAudio.pause();
         try { state.previewAudio.currentTime = 0; } catch (error) {}
@@ -2613,10 +2670,8 @@
         icon.className = `fa-solid ${active ? 'fa-circle-play' : 'fa-play'} mr-1`;
       });
       document.querySelectorAll('.playlist-row').forEach((row, idx) => {
-        const active = state.previewContext === 'stage' && state.stageTrackIndex === idx && state.previewAudio && !state.previewAudio.paused;
+        const active = state.previewContext === 'stage' && state.stageTrackIndex === idx && !state.stageEnded;
         row.className = `playlist-row flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${active ? 'bg-emerald-500 text-black font-bold' : 'text-zinc-300 bg-zinc-900/70'}`;
-        const icon = row.querySelector('[data-stage-play-icon]');
-        if (icon) icon.className = `fa-solid ${active ? 'fa-circle-play' : 'fa-play'} text-[10px]`;
       });
     }
 
@@ -3104,6 +3159,7 @@
     }
 
     function pruneEndedTickets() {
+      expireCompletedStageSessions();
       state.userTickets = state.userTickets.filter(t => {
         const concert = CONCERTS.find(c => c.id === t.concertId);
         return concert && !concert.isEnded;
@@ -3330,6 +3386,7 @@
       navigateTo('stage');
 
       if (concert.previewTracks?.length) {
+        beginStageSession(concert);
         renderStagePlaylist(concert);
         playStageTrack(0);
       } else {
@@ -3337,10 +3394,47 @@
         document.getElementById('stageTrackTitle').innerText = `Loading ${concert.artist} previews…`;
         fetchArtistPreviewTracks(concert).then(tracks => {
           if (state.activeTab !== 'stage' || state.selectedConcert?.id !== concert.id) return;
+          beginStageSession(concert);
           renderStagePlaylist(concert);
           if (tracks.length) playStageTrack(0);
         });
       }
+    }
+
+    function beginStageSession(concert) {
+      const durationSeconds = getConcertDurationSeconds(concert);
+      const existing = getStageSession(concert.id);
+      const now = Date.now();
+      const endsAt = existing?.endsAt && existing.endsAt > now
+        ? existing.endsAt
+        : now + (durationSeconds * 1000);
+      concert.isEnded = false;
+      saveStageSession(concert.id, {
+        concertId: concert.id,
+        startedAt: existing?.startedAt || now,
+        endsAt,
+        durationSeconds
+      });
+      startStageSessionTimer(concert);
+    }
+
+    function startStageSessionTimer(concert) {
+      if (state.stageSessionTimer) clearInterval(state.stageSessionTimer);
+      const tick = () => {
+        const session = getStageSession(concert.id);
+        if (!session) return;
+        const remaining = Math.ceil((session.endsAt - Date.now()) / 1000);
+        if (remaining <= 0) {
+          finishStagePlaylist(true);
+          return;
+        }
+        const total = Math.max(1, Number(session.durationSeconds) || remaining);
+        const elapsed = Math.max(0, total - remaining);
+        const label = document.getElementById('camStatusLabel');
+        if (label) label.innerText = `Concert ends in ${formatClock(remaining)} • ${Math.min(100, Math.round((elapsed / total) * 100))}%`;
+      };
+      tick();
+      state.stageSessionTimer = setInterval(tick, 1000);
     }
 
     function renderStagePlaylist(concert) {
@@ -3349,12 +3443,16 @@
         controls.innerHTML = `<div class="px-3 py-2 text-xs text-zinc-400">No official preview available.</div>`;
         return;
       }
-      controls.innerHTML = getArtistPlaylist(concert).map((track, idx) => `
+      controls.innerHTML = getArtistPlaylist(concert).map((track, idx) => {
+        const sourceTrack = concert.previewTracks[idx];
+        return `
         <div class="playlist-row flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${idx === state.stageTrackIndex ? 'bg-emerald-500 text-black font-bold' : 'text-zinc-300 bg-zinc-900/70'}">
-          <i data-stage-play-icon class="fa-solid ${idx === state.stageTrackIndex ? 'fa-circle-play' : 'fa-play'} text-[10px]"></i>
-          <span class="min-w-0 truncate">${idx + 1}. ${escapeHtml(track.replace(`${concert.artist} - `, ''))}</span>
+          <span class="w-5 shrink-0 text-center font-black tabular-nums">${idx + 1}</span>
+          <span class="min-w-0 flex-1 truncate">${escapeHtml(track.replace(`${concert.artist} - `, ''))}</span>
+          <span class="shrink-0 text-[10px] opacity-70">${formatClock(getTrackDuration(sourceTrack))}</span>
         </div>
-      `).join('');
+      `;
+      }).join('');
       updatePreviewPlaybackUI();
     }
 
@@ -3374,23 +3472,34 @@
     function playStageTrack(idx = 0) {
       const track = getArtistPlaylist(state.selectedConcert)[idx];
       if (!track) return;
+      if (state.stageTrackTimer) {
+        clearTimeout(state.stageTrackTimer);
+        state.stageTrackTimer = null;
+      }
       state.stageTrackIndex = idx;
       state.stageEnded = false;
       document.getElementById('stageTrackTitle').innerText = track;
       document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1} of ${state.selectedConcert.previewTracks.length}`;
-      const progress = document.getElementById('trackProgress');
-      if (progress) progress.style.width = `${((idx + 1) / state.selectedConcert.previewTracks.length) * 100}%`;
       updatePreviewPlaybackUI();
       playPreviewMusic(idx, { context: 'stage', advanceStage: true });
+      const trackDurationMs = getTrackDuration(state.selectedConcert.previewTracks[idx]) * 1000;
+      state.stageTrackTimer = setTimeout(() => {
+        if (idx < (state.selectedConcert?.previewTracks?.length || 0) - 1) playStageTrack(idx + 1);
+        else finishStagePlaylist(true);
+      }, trackDurationMs);
     }
 
-    function finishStagePlaylist() {
+    function finishStagePlaylist(markExpired = false) {
+      const concertId = state.selectedConcert?.id;
       stopPreviewMusic();
       state.stageEnded = true;
+      if (markExpired && state.selectedConcert) {
+        state.selectedConcert.isEnded = true;
+        if (concertId) clearStageSession(concertId);
+        pruneEndedTickets();
+      }
       document.getElementById('stageTrackTitle').innerText = 'Concert ended';
       document.getElementById('camStatusLabel').innerText = 'Playlist complete';
-      const progress = document.getElementById('trackProgress');
-      if (progress) progress.style.width = '100%';
       showToast('Concert ended. The full preview playlist has finished.', 'info');
       updatePreviewPlaybackUI();
     }
@@ -4025,7 +4134,6 @@
 
       function draw() {
         stageAnimationId = requestAnimationFrame(draw);
-        if (!isAudioPlaying) return;
         if (canvas.width < 50 || canvas.height < 50) resizeStageCanvas();
 
         ctx.fillStyle = 'rgba(9, 9, 11, 0.62)';
@@ -4034,30 +4142,12 @@
         step += 0.03;
         const width = canvas.width;
         const height = canvas.height;
-        const bars = 42 + state.stageTrackIndex * 8;
+        const bars = 58;
         const barWidth = width / bars;
-        const palettes = [
-          ['#e4e4e7', '#a1a1aa', '#22c55e'],
-          ['#fafafa', '#d4d4d8', '#38bdf8'],
-          ['#f4f4f5', '#a1a1aa', '#f59e0b']
-        ];
-        const palette = palettes[state.stageTrackIndex % palettes.length];
-
-        if (state.stageTrackIndex === 2) {
-          for (let i = 0; i < 90; i++) {
-            const x = (Math.sin(step + i * 12.9898) * 43758.5453) % 1 * width;
-            const y = height * 0.42 + (Math.cos(step * 0.7 + i) * height * 0.22);
-            ctx.fillStyle = i % 3 === 0 ? palette[0] : i % 3 === 1 ? palette[1] : palette[2];
-            ctx.globalAlpha = 0.22 + (i % 5) * 0.08;
-            ctx.beginPath();
-            ctx.arc(Math.abs(x), y, 2 + (i % 4), 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
+        const palette = ['#f4f4f5', '#a5b4fc', '#34d399'];
 
         for (let i = 0; i < bars; i++) {
-          const intensity = 0.45 + state.stageTrackIndex * 0.1;
+          const intensity = 0.55;
           const barHeight = Math.abs(Math.sin(step + i * 0.2) * (height * intensity)) + 20;
           const x = i * barWidth;
           const y = height - barHeight;
