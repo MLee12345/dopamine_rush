@@ -97,6 +97,41 @@
       outline: 2px solid #ffffff;
       outline-offset: 2px;
     }
+    #stageViewport:fullscreen #stageLeftDeck,
+    #stageViewport:-webkit-full-screen #stageLeftDeck {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      padding: 24px;
+      align-items: stretch;
+    }
+    #stageViewport:fullscreen #stagePlaylistControls,
+    #stageViewport:-webkit-full-screen #stagePlaylistControls {
+      height: 100%;
+      max-height: none;
+      max-width: 380px;
+      border-radius: 0.875rem;
+    }
+    #stageViewport:fullscreen #stageNowPlayingPanel,
+    #stageViewport:-webkit-full-screen #stageNowPlayingPanel {
+      align-self: flex-end;
+      margin-bottom: 22px;
+    }
+    .stage-spectrum-slider {
+      width: 8.5rem;
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+    .stage-spectrum-slider::-webkit-slider-runnable-track {
+      height: 0.5rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #facc15, #22c55e, #06b6d4, #4f46e5, #c084fc, #ef4444);
+    }
+    .stage-spectrum-slider::-moz-range-track {
+      height: 0.5rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #facc15, #22c55e, #06b6d4, #4f46e5, #c084fc, #ef4444);
+    }
 
     /* Standard sleek hover without infinite pulsing */
     .concert-card {
@@ -499,7 +534,7 @@
 
       <!-- Marketplace Filters -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-200 pb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_0.95fr_1.28fr_1.16fr_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.18fr_1.28fr_max-content_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
           <div class="relative">
             <button id="locationFilterButton" onclick="toggleFilterMenu('location')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
               <span>Location</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
@@ -509,14 +544,14 @@
           <div class="relative">
             <div id="dateFilterButton" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex items-center">
               <span class="grid grid-cols-2 gap-1 w-full">
-                <button id="dateStartButton" type="button" onclick="openDatePicker('start')" class="min-w-0 inline-flex items-center justify-center gap-0.5 rounded-lg px-1.5 py-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
-                <button id="dateEndButton" type="button" onclick="openDatePicker('end')" class="min-w-0 inline-flex items-center justify-center gap-0.5 rounded-lg px-1.5 py-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button id="dateStartButton" type="button" onclick="openDatePicker('start')" class="min-w-0 inline-flex items-center justify-center gap-0.5 px-1 py-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button id="dateEndButton" type="button" onclick="openDatePicker('end')" class="min-w-0 inline-flex items-center justify-center gap-0.5 px-1 py-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
               </span>
             </div>
-            <div id="dateFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 w-72 bg-white border border-indigo-200 rounded-xl p-2"></div>
+            <div id="dateFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 w-80 bg-white border border-indigo-200 rounded-xl p-2"></div>
           </div>
           <div class="h-full min-h-[58px] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950">
-            <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0.00–$300.00</span></div>
+            <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0-$300</span></div>
             <div class="price-range-wrap mt-1">
               <div class="price-track"></div>
               <div id="priceRangeActive" class="price-range-active"></div>
@@ -525,10 +560,10 @@
             </div>
           </div>
           <div class="relative">
-            <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
+            <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-max min-w-[8.5rem] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between gap-3">
               <span class="whitespace-nowrap">Sort by</span><i class="fa-solid fa-arrow-down-wide-short text-[10px] shrink-0"></i>
             </button>
-            <div id="sortFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
+            <div id="sortFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 min-w-full w-max bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
           <button onclick="clearFilters()" class="h-full min-h-[58px] bg-zinc-100 border border-zinc-300 rounded-xl px-2.5 py-2 text-xs font-bold text-zinc-700 hover:bg-zinc-200">
             Clear
@@ -753,28 +788,22 @@
         </div>
 
         <!-- Artist Playlist Controls -->
-        <div class="relative z-10 p-4 sm:p-6 flex justify-start items-start pointer-events-none h-full">
+        <div id="stageLeftDeck" class="absolute z-10 left-4 top-4 bottom-4 sm:left-6 sm:top-6 sm:bottom-6 flex items-start gap-3 pointer-events-none">
           <div id="stagePlaylistControls" class="pointer-events-auto flex max-h-full w-full max-w-xs flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
             <!-- Dynamic playlist buttons -->
           </div>
-        </div>
-
-        <!-- Stage Bottom Controls Overlay -->
-        <div class="relative z-10 p-4 sm:p-6 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center space-x-3">
-            <button id="stageAudioBtn" onclick="toggleStageAudio()" class="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all">
+          <div id="stageNowPlayingPanel" class="pointer-events-auto flex items-center gap-3 rounded-xl bg-zinc-950/80 border border-zinc-800 p-3 pr-4 backdrop-blur-md max-w-sm">
+            <button id="stageAudioBtn" onclick="toggleStageAudio()" class="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all shrink-0">
               <i class="fa-solid fa-pause" id="audioIcon"></i>
             </button>
             <div class="min-w-0">
-              <div class="text-xs font-semibold text-white truncate" id="stageTrackTitle">Track 01</div>
-              <div class="text-[11px] font-semibold text-zinc-300" id="camStatusLabel">Playlist: Track 1</div>
-              <div class="text-[11px] text-zinc-400 flex items-center gap-1">
+              <div class="text-sm font-extrabold text-white truncate" id="stageTrackTitle">Track 01</div>
+              <div class="text-xs font-bold text-zinc-300" id="camStatusLabel">Playlist: Track 1</div>
+              <div class="text-xs text-zinc-400 flex items-center gap-1">
                 <i class="fa-solid fa-users text-emerald-400"></i> <span id="stageViewerCount">14,289</span> tuning in
               </div>
             </div>
           </div>
-
-          <div></div>
         </div>
       </div>
     </section>
@@ -1467,6 +1496,10 @@
       return `$${roundMoney(value).toFixed(2)}`;
     }
 
+    function formatWholeMoney(value) {
+      return `$${Math.round(Number(value || 0)).toLocaleString()}`;
+    }
+
     function centsForKey(key) {
       let hash = 0;
       String(key).split('').forEach(char => {
@@ -1686,7 +1719,9 @@
       audioCtx: null,
       previewAudio: null,
       stageAudioLooping: false,
-      stageWaveTheme: localStorage.getItem('dopamineStageWaveTheme') || 'auto',
+      stageWaveHue: Number(localStorage.getItem('dopamineStageWaveHue') || 158),
+      stageViewerCount: 14289,
+      stageViewerTimer: null,
       previewTrackIndex: -1,
       previewContext: '',
       stageEnded: false,
@@ -2279,13 +2314,7 @@
           ${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => `<span>${day}</span>`).join('')}
         </div>
         <div class="grid grid-cols-7 gap-1">${blanks}${days}</div>
-        <div class="mt-2 border-t border-indigo-100 pt-2 text-[10px] font-bold text-indigo-500 space-y-1">
-          <div class="flex items-center justify-between gap-2">
-            <span class="${state.datePickerField === 'start' ? 'text-indigo-700' : ''}">From ${formatShortDate(state.filters.dateStart) || 'any'}</span>
-            <span class="${state.datePickerField === 'end' ? 'text-indigo-700' : ''}">To ${formatShortDate(state.filters.dateEnd) || 'any'}</span>
-          </div>
-          <div>Choosing ${state.datePickerField === 'start' ? 'from' : 'to'} date</div>
-        </div>`;
+        `;
     }
 
     function formatShortDate(value) {
@@ -2298,8 +2327,8 @@
       const end = document.getElementById('dateEndLabel');
       if (start) start.innerText = state.filters.dateStart ? `From ${formatShortDate(state.filters.dateStart)}` : 'From';
       if (end) end.innerText = state.filters.dateEnd ? `To ${formatShortDate(state.filters.dateEnd)}` : 'To';
-      document.getElementById('dateStartButton')?.classList.toggle('bg-white', state.datePickerField === 'start');
-      document.getElementById('dateEndButton')?.classList.toggle('bg-white', state.datePickerField === 'end');
+      document.getElementById('dateStartButton')?.classList.toggle('text-indigo-700', state.datePickerField === 'start');
+      document.getElementById('dateEndButton')?.classList.toggle('text-indigo-700', state.datePickerField === 'end');
     }
 
     function matchesDateRange(dateKey) {
@@ -2397,7 +2426,7 @@
           <div class="p-5 pt-0 flex items-center justify-between gap-3">
             <div>
               <span class="text-[10px] text-zinc-500 block uppercase">From</span>
-              <span class="text-lg font-extrabold text-zinc-950">${formatMoney(concert.priceFrom)}</span>
+              <span class="text-lg font-extrabold text-zinc-950">${formatWholeMoney(concert.priceFrom)}</span>
             </div>
             <button onclick="openTicketModal('${concert.id}')" class="px-5 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-xs rounded-md transition-all shadow-md">
               See Tickets
@@ -2430,7 +2459,7 @@
     }
 
     function updatePriceRangeLabel() {
-      document.getElementById('priceRangeLabel').innerText = `${formatMoney(state.filters.priceMin)}–${formatMoney(state.filters.priceMax)}`;
+      document.getElementById('priceRangeLabel').innerText = `${formatWholeMoney(state.filters.priceMin)}-${formatWholeMoney(state.filters.priceMax)}`;
       const minInput = document.getElementById('priceMinFilter');
       const maxInput = document.getElementById('priceMaxFilter');
       const active = document.getElementById('priceRangeActive');
@@ -2831,6 +2860,7 @@
     }
 
     function stopPreviewMusic() {
+      stopStageViewerTicker();
       if (state.stageSessionTimer) {
         clearInterval(state.stageSessionTimer);
         state.stageSessionTimer = null;
@@ -3580,6 +3610,7 @@
       state.stageEnded = false;
       navigateTo('stage');
       renderStageWaveControls();
+      startStageViewerTicker(concert);
 
       if (concert.previewTracks?.length) {
         const session = beginStageSession(concert);
@@ -4365,21 +4396,6 @@
        ========================================================================== */
     let isAudioPlaying = false;
     let stageAnimationId = null;
-    const STAGE_WAVE_THEMES = [
-      { id: 'auto', label: 'Auto', colors: ['#f4f4f5', '#a5b4fc', '#34d399'] },
-      { id: 'mint', label: 'Mint', colors: ['#ecfeff', '#5eead4', '#10b981'] },
-      { id: 'violet', label: 'Violet', colors: ['#faf5ff', '#c084fc', '#4f46e5'] },
-      { id: 'sunset', label: 'Sunset', colors: ['#fff7ed', '#fb7185', '#f97316'] },
-      { id: 'blue', label: 'Blue', colors: ['#eff6ff', '#38bdf8', '#2563eb'] }
-    ];
-    const STAGE_AUTO_PALETTES = [
-      ['#f4f4f5', '#a5b4fc', '#34d399'],
-      ['#fef3c7', '#fb7185', '#f97316'],
-      ['#dbeafe', '#38bdf8', '#22d3ee'],
-      ['#f5d0fe', '#c084fc', '#6366f1'],
-      ['#dcfce7', '#86efac', '#14b8a6'],
-      ['#fee2e2', '#f472b6', '#ef4444']
-    ];
 
     function resizeStageCanvas() {
       const canvas = document.getElementById('stageCanvas');
@@ -4392,27 +4408,28 @@
     }
 
     function getStageWavePalette() {
-      const selected = STAGE_WAVE_THEMES.find(theme => theme.id === state.stageWaveTheme);
-      if (selected && selected.id !== 'auto') return selected.colors;
-      return STAGE_AUTO_PALETTES[state.stageTrackIndex % STAGE_AUTO_PALETTES.length];
+      const hue = Number(state.stageWaveHue) || 0;
+      return [
+        `hsl(${hue}, 95%, 92%)`,
+        `hsl(${(hue + 22) % 360}, 88%, 64%)`,
+        `hsl(${(hue + 52) % 360}, 86%, 48%)`
+      ];
     }
 
     function renderStageWaveControls() {
       const controls = document.getElementById('stageWaveControls');
       if (!controls) return;
-      controls.innerHTML = STAGE_WAVE_THEMES.map(theme => {
-        const colors = theme.id === 'auto' ? STAGE_AUTO_PALETTES[state.stageTrackIndex % STAGE_AUTO_PALETTES.length] : theme.colors;
-        const gradient = `linear-gradient(135deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
-        return `
-          <button type="button" onclick="setStageWaveTheme('${theme.id}')" class="stage-swatch ${state.stageWaveTheme === theme.id ? 'is-active' : ''} h-7 w-7 rounded-lg border border-white/15" style="background:${gradient}" title="${theme.label}" aria-label="${theme.label} waves"></button>
-        `;
-      }).join('');
+      controls.innerHTML = `
+        <label class="flex items-center gap-2 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+          Waves
+          <input id="stageWaveHueInput" type="range" min="0" max="359" value="${state.stageWaveHue}" oninput="setStageWaveHue(this.value)" class="stage-spectrum-slider">
+        </label>
+      `;
     }
 
-    function setStageWaveTheme(themeId) {
-      state.stageWaveTheme = STAGE_WAVE_THEMES.some(theme => theme.id === themeId) ? themeId : 'auto';
-      localStorage.setItem('dopamineStageWaveTheme', state.stageWaveTheme);
-      renderStageWaveControls();
+    function setStageWaveHue(value) {
+      state.stageWaveHue = Math.max(0, Math.min(359, Number(value) || 0));
+      localStorage.setItem('dopamineStageWaveHue', String(state.stageWaveHue));
     }
 
     function isStageFullscreen() {
@@ -4444,6 +4461,30 @@
       icon.className = isStageFullscreen() ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
     }
 
+    function updateStageViewerCount() {
+      const viewer = document.getElementById('stageViewerCount');
+      if (!viewer) return;
+      viewer.innerText = Math.max(1200, Math.round(state.stageViewerCount)).toLocaleString();
+    }
+
+    function startStageViewerTicker(concert) {
+      if (state.stageViewerTimer) clearInterval(state.stageViewerTimer);
+      const seed = seededRandom(`${concert.id}-viewers`)();
+      state.stageViewerCount = 8200 + Math.round(seed * 16000);
+      updateStageViewerCount();
+      state.stageViewerTimer = setInterval(() => {
+        const drift = Math.round((Math.random() - 0.42) * 360);
+        state.stageViewerCount = Math.max(1200, state.stageViewerCount + drift);
+        updateStageViewerCount();
+      }, 5200);
+    }
+
+    function stopStageViewerTicker() {
+      if (!state.stageViewerTimer) return;
+      clearInterval(state.stageViewerTimer);
+      state.stageViewerTimer = null;
+    }
+
     function initStageVisualizer() {
       const canvas = document.getElementById('stageCanvas');
       if (!canvas) return;
@@ -4470,7 +4511,7 @@
         ctx.fillStyle = 'rgba(9, 9, 11, 0.62)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        step += 0.03;
+        if (isAudioPlaying) step += 0.03;
         const width = canvas.width;
         const height = canvas.height;
         const bars = 58;
