@@ -483,7 +483,7 @@
 
       <!-- Marketplace Filters -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-200 pb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_0.95fr_1.28fr_1.45fr_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_0.95fr_1.28fr_1.16fr_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
           <div class="relative">
             <button id="locationFilterButton" onclick="toggleFilterMenu('location')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
               <span>Location</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
@@ -491,14 +491,13 @@
             <div id="locationFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
           <div class="relative">
-            <div class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex items-center">
+            <div id="dateFilterButton" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex items-center">
               <span class="grid grid-cols-2 gap-1 w-full">
-                <button type="button" onclick="openDatePicker('dateStartFilter')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
-                <button type="button" onclick="openDatePicker('dateEndFilter')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button type="button" onclick="openDatePicker('start')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button type="button" onclick="openDatePicker('end')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
               </span>
-              <input id="dateStartFilter" type="date" onchange="handleDateFilter('start', this.value)" tabindex="-1" aria-hidden="true" class="absolute w-px h-px opacity-0 pointer-events-none">
-              <input id="dateEndFilter" type="date" onchange="handleDateFilter('end', this.value)" tabindex="-1" aria-hidden="true" class="absolute w-px h-px opacity-0 pointer-events-none">
             </div>
+            <div id="dateFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 w-72 bg-white border border-indigo-200 rounded-xl p-2"></div>
           </div>
           <div class="h-full min-h-[58px] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950">
             <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0–$300</span></div>
@@ -714,6 +713,9 @@
         </div>
 
         <div class="flex items-center space-x-3">
+          <button onclick="openMerchQueueForCurrentStage()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-lg text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+            <i class="fa-solid fa-bag-shopping"></i> Merch
+          </button>
           <div class="flex items-center gap-2 bg-red-950/80 border border-red-500/40 text-red-400 text-xs font-bold px-3 py-1 rounded-full">
             <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
             <span>LIVE STAGE BROADCAST</span>
@@ -728,8 +730,8 @@
         <canvas id="stageCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
 
         <!-- Artist Playlist Controls -->
-        <div class="relative z-10 p-4 sm:p-6 flex justify-end items-start pointer-events-none h-full">
-          <div id="stagePlaylistControls" class="pointer-events-auto ml-auto flex max-h-full w-full max-w-xs flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
+        <div class="relative z-10 p-4 sm:p-6 flex justify-start items-start pointer-events-none h-full">
+          <div id="stagePlaylistControls" class="pointer-events-auto flex max-h-full w-full max-w-xs flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
             <!-- Dynamic playlist buttons -->
           </div>
         </div>
@@ -1548,6 +1550,8 @@
       searchTerm: '',
       sortBy: 'recommended',
       filters: { location: 'ALL', date: 'ALL', dateStart: '', dateEnd: '', priceMin: 0, priceMax: 0 },
+      datePickerField: 'start',
+      datePickerMonth: '',
       accountMode: 'signup',
       users: readJsonStorage('dopamineUsers', []),
       account: INITIAL_ACCOUNT,
@@ -2061,17 +2065,14 @@
       document.getElementById('priceMinFilter').value = state.filters.priceMin;
       document.getElementById('priceMaxFilter').value = state.filters.priceMax;
       document.getElementById('locationFilterButton').querySelector('span').innerText = state.filters.location === 'ALL' ? 'Location' : state.filters.location;
-      const dateStartInput = document.getElementById('dateStartFilter');
-      const dateEndInput = document.getElementById('dateEndFilter');
-      if (dateStartInput) dateStartInput.value = state.filters.dateStart;
-      if (dateEndInput) dateEndInput.value = state.filters.dateEnd;
       updateDateFilterLabels();
+      renderDateCalendar();
       updatePriceRangeLabel();
     }
 
     function toggleFilterMenu(type) {
       const active = document.getElementById(`${type}FilterMenu`);
-      ['locationFilterMenu', 'sortFilterMenu'].forEach(id => {
+      ['locationFilterMenu', 'dateFilterMenu', 'sortFilterMenu'].forEach(id => {
         const menu = document.getElementById(id);
         if (menu && menu !== active) menu.classList.add('hidden');
       });
@@ -2079,8 +2080,8 @@
     }
 
     function handleFilterOutsideClick(event) {
-      if (event.target.closest('#locationFilterButton, #locationFilterMenu, #sortFilterButton, #sortFilterMenu')) return;
-      ['locationFilterMenu', 'sortFilterMenu'].forEach(id => {
+      if (event.target.closest('#locationFilterButton, #locationFilterMenu, #dateFilterButton, #dateFilterMenu, #sortFilterButton, #sortFilterMenu')) return;
+      ['locationFilterMenu', 'dateFilterMenu', 'sortFilterMenu'].forEach(id => {
         const menu = document.getElementById(id);
         if (menu) menu.classList.add('hidden');
       });
@@ -2107,19 +2108,96 @@
     function handleDateFilter(which, value) {
       if (which === 'start') state.filters.dateStart = value || '';
       if (which === 'end') state.filters.dateEnd = value || '';
-      const dateStartInput = document.getElementById('dateStartFilter');
-      const dateEndInput = document.getElementById('dateEndFilter');
-      if (dateStartInput) dateStartInput.value = state.filters.dateStart;
-      if (dateEndInput) dateEndInput.value = state.filters.dateEnd;
       updateDateFilterLabels();
+      renderDateCalendar();
       renderConcerts();
     }
 
-    function openDatePicker(inputId) {
-      const input = document.getElementById(inputId);
-      if (!input) return;
-      if (typeof input.showPicker === 'function') input.showPicker();
-      else input.click();
+    function openDatePicker(field = 'start') {
+      state.datePickerField = field;
+      const selected = field === 'start' ? state.filters.dateStart : state.filters.dateEnd;
+      state.datePickerMonth = selected || state.datePickerMonth || getFirstConcertDateKey() || todayIsoDate();
+      ['locationFilterMenu', 'sortFilterMenu'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+      renderDateCalendar();
+      document.getElementById('dateFilterMenu')?.classList.remove('hidden');
+    }
+
+    function todayIsoDate() {
+      const date = new Date();
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function getFirstConcertDateKey() {
+      return getPreviewCatalogConcerts()
+        .map(concert => concert.dateKey)
+        .filter(Boolean)
+        .sort()[0] || '';
+    }
+
+    function parseDateKey(value) {
+      const [year, month, day] = String(value || '').split('-').map(Number);
+      return new Date(year || 2026, (month || 1) - 1, day || 1, 12);
+    }
+
+    function makeDateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function shiftDatePickerMonth(delta) {
+      const date = parseDateKey(state.datePickerMonth || todayIsoDate());
+      date.setMonth(date.getMonth() + delta, 1);
+      state.datePickerMonth = makeDateKey(date);
+      renderDateCalendar();
+    }
+
+    function selectCalendarDate(value) {
+      handleDateFilter(state.datePickerField, value);
+      if (state.datePickerField === 'start') {
+        state.datePickerField = 'end';
+        state.datePickerMonth = state.filters.dateEnd || value;
+        renderDateCalendar();
+      } else {
+        document.getElementById('dateFilterMenu')?.classList.add('hidden');
+      }
+    }
+
+    function renderDateCalendar() {
+      const menu = document.getElementById('dateFilterMenu');
+      if (!menu) return;
+      const monthDate = parseDateKey(state.datePickerMonth || state.filters.dateStart || getFirstConcertDateKey() || todayIsoDate());
+      monthDate.setDate(1);
+      const year = monthDate.getFullYear();
+      const month = monthDate.getMonth();
+      const monthLabel = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const firstWeekday = monthDate.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const selectedValue = state.datePickerField === 'start' ? state.filters.dateStart : state.filters.dateEnd;
+      const rangeDates = [state.filters.dateStart, state.filters.dateEnd].filter(Boolean).sort();
+      const [rangeStart, rangeEnd = rangeStart] = rangeDates;
+      const blanks = Array.from({ length: firstWeekday }, () => '<span></span>').join('');
+      const days = Array.from({ length: daysInMonth }, (_, idx) => {
+        const day = idx + 1;
+        const key = makeDateKey(new Date(year, month, day, 12));
+        const selected = key === selectedValue;
+        const inRange = rangeStart && rangeEnd && key >= rangeStart && key <= rangeEnd;
+        return `
+          <button type="button" onclick="selectCalendarDate('${key}')" class="h-8 rounded-lg text-xs font-black transition-colors ${selected ? 'bg-indigo-700 text-white' : inRange ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-950 hover:bg-indigo-50'}">
+            ${day}
+          </button>`;
+      }).join('');
+      menu.innerHTML = `
+        <div class="flex items-center justify-between px-1 pb-2">
+          <button type="button" onclick="shiftDatePickerMonth(-1)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+          <div class="text-xs font-black text-indigo-950">${monthLabel}</div>
+          <button type="button" onclick="shiftDatePickerMonth(1)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+          ${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => `<span>${day}</span>`).join('')}
+        </div>
+        <div class="grid grid-cols-7 gap-1">${blanks}${days}</div>
+        <div class="mt-2 border-t border-indigo-100 pt-2 text-[10px] font-bold text-indigo-500">
+          Choosing ${state.datePickerField === 'start' ? 'from' : 'to'}
+        </div>`;
     }
 
     function updateDateFilterLabels() {
@@ -2279,8 +2357,7 @@
       const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
       state.filters = { location: 'ALL', date: 'ALL', dateStart: '', dateEnd: '', priceMin: Math.min(...prices), priceMax: Math.max(...prices) };
       document.getElementById('locationFilterButton').querySelector('span').innerText = 'Location';
-      document.getElementById('dateStartFilter').value = '';
-      document.getElementById('dateEndFilter').value = '';
+      document.getElementById('dateFilterMenu')?.classList.add('hidden');
       document.getElementById('priceMinFilter').value = state.filters.priceMin;
       document.getElementById('priceMaxFilter').value = state.filters.priceMax;
       initFilters();
@@ -4144,7 +4221,15 @@
         const height = canvas.height;
         const bars = 58;
         const barWidth = width / bars;
-        const palette = ['#f4f4f5', '#a5b4fc', '#34d399'];
+        const palettes = [
+          ['#f4f4f5', '#a5b4fc', '#34d399'],
+          ['#fef3c7', '#fb7185', '#f97316'],
+          ['#dbeafe', '#38bdf8', '#22d3ee'],
+          ['#f5d0fe', '#c084fc', '#6366f1'],
+          ['#dcfce7', '#86efac', '#14b8a6'],
+          ['#fee2e2', '#f472b6', '#ef4444']
+        ];
+        const palette = palettes[state.stageTrackIndex % palettes.length];
 
         for (let i = 0; i < bars; i++) {
           const intensity = 0.55;
