@@ -483,7 +483,7 @@
 
       <!-- Marketplace Filters -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-200 pb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.35fr_1.3fr_0.82fr_0.68fr] gap-2 w-full lg:max-w-5xl items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.35fr_1.3fr_1.08fr_0.68fr] gap-2 w-full lg:max-w-5xl items-stretch">
           <div class="relative">
             <button id="locationFilterButton" onclick="toggleFilterMenu('location')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
               <span>Location</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
@@ -491,13 +491,15 @@
             <div id="locationFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
           <div class="relative">
-            <label class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex flex-col justify-center">
+            <div class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex flex-col justify-center">
               <span class="text-[10px] uppercase tracking-wider text-indigo-700">Date</span>
               <span class="grid grid-cols-2 gap-1">
-                <input id="dateStartFilter" type="date" onchange="handleDateFilter('start', this.value)" class="min-w-0 bg-transparent text-[11px] font-bold text-indigo-950 focus:outline-none [color-scheme:light]">
-                <input id="dateEndFilter" type="date" onchange="handleDateFilter('end', this.value)" class="min-w-0 bg-transparent text-[11px] font-bold text-indigo-950 focus:outline-none [color-scheme:light]">
+                <button type="button" onclick="openDatePicker('dateStartFilter')" class="min-w-0 flex items-center justify-between gap-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button type="button" onclick="openDatePicker('dateEndFilter')" class="min-w-0 flex items-center justify-between gap-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
               </span>
-            </label>
+              <input id="dateStartFilter" type="date" onchange="handleDateFilter('start', this.value)" class="absolute w-px h-px opacity-0 pointer-events-none">
+              <input id="dateEndFilter" type="date" onchange="handleDateFilter('end', this.value)" class="absolute w-px h-px opacity-0 pointer-events-none">
+            </div>
           </div>
           <div class="h-full min-h-[58px] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950">
             <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0–$300</span></div>
@@ -510,7 +512,7 @@
           </div>
           <div class="relative">
             <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
-              <span class="truncate">Sort</span><i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i>
+              <span class="truncate">Sort by</span><i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i>
             </button>
             <div id="sortFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
           </div>
@@ -1645,7 +1647,6 @@
       initFilters();
       renderDailyWheel();
       renderConcerts();
-      hydratePreviewCatalog();
       updateTicketBadge();
       updateWalletUI();
       initStageVisualizer();
@@ -2070,6 +2071,7 @@
       const dateEndInput = document.getElementById('dateEndFilter');
       if (dateStartInput) dateStartInput.value = state.filters.dateStart;
       if (dateEndInput) dateEndInput.value = state.filters.dateEnd;
+      updateDateFilterLabels();
       updatePriceRangeLabel();
     }
 
@@ -2101,7 +2103,7 @@
     function selectSortOption(value, label) {
       state.sortBy = value;
       const button = document.getElementById('sortFilterButton');
-      if (button) button.querySelector('span').innerText = value === 'recommended' ? 'Sort' : label.replace('Date: ', '').replace('Price: ', '');
+      if (button) button.querySelector('span').innerText = value === 'recommended' ? 'Sort by' : label.replace('Date: ', '').replace('Price: ', '');
       const menu = document.getElementById('sortFilterMenu');
       if (menu) menu.classList.add('hidden');
       initFilters();
@@ -2115,7 +2117,26 @@
       const dateEndInput = document.getElementById('dateEndFilter');
       if (dateStartInput) dateStartInput.value = state.filters.dateStart;
       if (dateEndInput) dateEndInput.value = state.filters.dateEnd;
+      updateDateFilterLabels();
       renderConcerts();
+    }
+
+    function openDatePicker(inputId) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (typeof input.showPicker === 'function') input.showPicker();
+      else input.click();
+    }
+
+    function updateDateFilterLabels() {
+      const format = (value, fallback) => {
+        if (!value) return fallback;
+        return new Date(`${value}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      };
+      const start = document.getElementById('dateStartLabel');
+      const end = document.getElementById('dateEndLabel');
+      if (start) start.innerText = format(state.filters.dateStart, 'From');
+      if (end) end.innerText = format(state.filters.dateEnd, 'To');
     }
 
     function matchesDateRange(dateKey) {
@@ -2375,40 +2396,25 @@
       const request = (async () => {
         try {
           const requestedArtist = normalizeArtistName(concert.artist);
-          const resultPool = [];
-          const searchTerms = [
-            { term: concert.artist, attribute: 'artistTerm' },
-            { term: concert.artist },
-            { term: `${concert.artist} ${concert.tour}` }
-          ];
           const maxPreviewTracks = 12;
-          for (const search of searchTerms) {
-            const payload = await searchItunesPreviewSongs(search.term, search.attribute);
-            (payload.results || []).forEach(result => {
-              if (result.previewUrl) resultPool.push(result);
-            });
-            if (resultPool.length >= maxPreviewTracks * 2) break;
-          }
-          const exactMatches = resultPool.filter(result => {
-            const resultArtist = normalizeArtistName(result.artistName);
-            return resultArtist === requestedArtist ||
-              resultArtist.startsWith(`${requestedArtist} `) ||
-              requestedArtist.startsWith(`${resultArtist} `);
-          });
-          const relaxedMatches = exactMatches.length >= 3 ? exactMatches : resultPool;
+          const artistSearch = await requestDeezerJsonp(`https://api.deezer.com/search/artist?q=${encodeURIComponent(concert.artist)}&limit=8`);
+          const artistMatches = artistSearch.data || [];
+          const matchedArtist = artistMatches.find(result => normalizeArtistName(result.name) === requestedArtist) || artistMatches[0];
+          if (!matchedArtist?.id) return [];
+          const trackSearch = await requestDeezerJsonp(`https://api.deezer.com/artist/${matchedArtist.id}/top?limit=${maxPreviewTracks}`);
           const uniqueTracks = [];
           const seen = new Set();
-          relaxedMatches.forEach(result => {
-            const key = normalizeArtistName(result.trackName);
+          (trackSearch.data || []).forEach(result => {
+            const key = normalizeArtistName(result.title);
             if (!key || seen.has(key) || uniqueTracks.length >= maxPreviewTracks) return;
             seen.add(key);
             uniqueTracks.push({
-              trackName: result.trackName,
-              artistName: result.artistName,
-              collectionName: result.collectionName || '',
-              previewUrl: result.previewUrl,
-              trackViewUrl: result.trackViewUrl || result.collectionViewUrl || '',
-              artworkUrl: result.artworkUrl100 || result.artworkUrl60 || ''
+              trackName: result.title,
+              artistName: result.artist?.name || matchedArtist.name || concert.artist,
+              collectionName: result.album?.title || '',
+              previewUrl: result.preview || '',
+              trackViewUrl: result.link || matchedArtist.link || '',
+              artworkUrl: result.album?.cover_medium || result.album?.cover_small || matchedArtist.picture_medium || ''
             });
           });
           concert.previewAvailable = uniqueTracks.length >= 3;
@@ -2423,9 +2429,38 @@
 
       state.artistPreviewCache.set(cacheKey, request);
       const tracks = await request;
+      if (!tracks.length) state.artistPreviewCache.delete(cacheKey);
       concert.previewTracks = tracks;
       concert.previewAvailable = tracks.length >= 3;
       return tracks;
+    }
+
+    function requestDeezerJsonp(url) {
+      return new Promise(resolve => {
+        const callbackName = `deezerPreview_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement('script');
+        const cleanup = () => {
+          delete window[callbackName];
+          script.remove();
+        };
+        const timeout = window.setTimeout(() => {
+          cleanup();
+          resolve({ data: [] });
+        }, 6500);
+        window[callbackName] = payload => {
+          window.clearTimeout(timeout);
+          cleanup();
+          resolve(payload || { data: [] });
+        };
+        const separator = url.includes('?') ? '&' : '?';
+        script.src = `${url}${separator}output=jsonp&callback=${callbackName}`;
+        script.onerror = () => {
+          window.clearTimeout(timeout);
+          cleanup();
+          resolve({ data: [] });
+        };
+        document.head.appendChild(script);
+      });
     }
 
     async function searchItunesPreviewSongs(term, attribute = '') {
@@ -2437,14 +2472,7 @@
         limit: '50'
       });
       if (attribute) params.set('attribute', attribute);
-      const url = `https://itunes.apple.com/search?${params.toString()}`;
-      try {
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`Preview search failed: ${response.status}`);
-        return await response.json();
-      } catch (error) {
-        return searchItunesPreviewSongsJsonp(params);
-      }
+      return searchItunesPreviewSongsJsonp(params);
     }
 
     function searchItunesPreviewSongsJsonp(params) {
@@ -2502,9 +2530,9 @@
             `).join('')}
           </div>
           <div class="flex items-center justify-end gap-1 pt-0.5 text-[9px] text-zinc-400">
-            <span>Courtesy of iTunes</span>
+            <span>Courtesy of Deezer</span>
             <span>•</span>
-            <a href="${escapeHtml(tracks[0].trackViewUrl)}" target="_blank" rel="noopener noreferrer" class="font-bold text-zinc-600 hover:text-zinc-950"><i class="fa-brands fa-apple mr-0.5"></i>Apple Music</a>
+            <a href="${escapeHtml(tracks[0].trackViewUrl)}" target="_blank" rel="noopener noreferrer" class="font-bold text-zinc-600 hover:text-zinc-950"><i class="fa-solid fa-music mr-0.5"></i>Deezer</a>
           </div>`;
         updatePreviewPlaybackUI();
       });
@@ -2944,6 +2972,7 @@
 
     function startHoldToBuy(event) {
       event.preventDefault();
+      primeAudioContext();
       if (state.holdTimer) clearInterval(state.holdTimer);
       state.holdProgress = 0;
       document.getElementById('holdBuyFill').style.width = '0%';
@@ -3050,6 +3079,7 @@
       stopTicketUrgency();
       stopReservationTimer();
       launchConfetti();
+      playTicketPurchaseSound();
       persistTickets();
       updateTicketBadge();
       consumeCheckoutDeal();
@@ -4338,6 +4368,33 @@
         osc.connect(gain).connect(state.audioCtx.destination);
         osc.start(now);
         osc.stop(now + 0.24);
+      });
+    }
+
+    function primeAudioContext() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!state.audioCtx) state.audioCtx = new AudioContextClass();
+      if (state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
+    }
+
+    async function playTicketPurchaseSound() {
+      primeAudioContext();
+      if (!state.audioCtx) return;
+      if (state.audioCtx.state === 'suspended') await state.audioCtx.resume().catch(() => {});
+      const now = state.audioCtx.currentTime;
+      [392, 523, 659, 784].forEach((freq, idx) => {
+        const osc = state.audioCtx.createOscillator();
+        const gain = state.audioCtx.createGain();
+        const start = now + idx * 0.075;
+        osc.type = idx === 3 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.14, start + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.19);
+        osc.connect(gain).connect(state.audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + 0.21);
       });
     }
 
