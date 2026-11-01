@@ -480,7 +480,7 @@
 
       <!-- Marketplace Filters -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-200 pb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full lg:max-w-4xl items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 w-full lg:max-w-6xl items-stretch">
           <div class="relative">
             <button id="locationFilterButton" onclick="toggleFilterMenu('location')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
               <span>Location</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
@@ -505,12 +505,18 @@
               <input id="priceMaxFilter" type="range" oninput="handlePriceRange('max')" class="price-range-input">
             </div>
           </div>
+          <div class="relative">
+            <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
+              <span>Sort: Recommended</span><i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i>
+            </button>
+            <div id="sortFilterMenu" class="filter-menu hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-indigo-200 rounded-xl p-1"></div>
+          </div>
           <button onclick="clearFilters()" class="h-full min-h-[58px] bg-zinc-100 border border-zinc-300 rounded-xl px-3 py-2 text-xs font-bold text-zinc-700 hover:bg-zinc-200">
             Clear filters
           </button>
         </div>
         <div class="hidden sm:block text-xs text-zinc-500">
-          Showing <span id="concertCount" class="text-zinc-900 font-semibold">60</span> Live Events
+          Showing <span id="concertCount" class="text-zinc-900 font-semibold">500</span> Live Events
         </div>
       </div>
 
@@ -1433,7 +1439,7 @@
     });
 
     function getPreviewCatalogConcerts() {
-      return CONCERTS.filter(concert => concert.previewAvailable !== false);
+      return CONCERTS;
     }
 
     function hydratePreviewCatalog() {
@@ -1544,6 +1550,7 @@
       activeTab: 'discover',
       navReady: false,
       searchTerm: '',
+      sortBy: 'recommended',
       filters: { location: 'ALL', date: 'ALL', dateStart: '', dateEnd: '', priceMin: 0, priceMax: 0 },
       accountMode: 'signup',
       users: readJsonStorage('dopamineUsers', []),
@@ -2024,6 +2031,21 @@
           <span>${option.label}</span>${state.filters.location === option.value ? '<i class="fa-solid fa-check text-indigo-700"></i>' : ''}
         </button>
       `).join('');
+      const sortMenu = document.getElementById('sortFilterMenu');
+      const sortOptions = [
+        { value: 'recommended', label: 'Recommended' },
+        { value: 'date-asc', label: 'Date: Soonest' },
+        { value: 'price-asc', label: 'Price: Low to High' },
+        { value: 'price-desc', label: 'Price: High to Low' },
+        { value: 'artist-asc', label: 'Artist: A to Z' }
+      ];
+      if (sortMenu) {
+        sortMenu.innerHTML = sortOptions.map(option => `
+          <button onclick="selectSortOption('${option.value}', '${option.label}')" class="w-full px-3 py-2 text-left rounded-lg text-xs font-bold text-indigo-950 hover:bg-indigo-50 flex items-center justify-between">
+            <span>${option.label}</span>${state.sortBy === option.value ? '<i class="fa-solid fa-check text-indigo-700"></i>' : ''}
+          </button>
+        `).join('');
+      }
       const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
       const min = prices.length ? Math.min(...prices) : 0;
       const max = prices.length ? Math.max(...prices) : 500;
@@ -2049,16 +2071,16 @@
 
     function toggleFilterMenu(type) {
       const active = document.getElementById(`${type}FilterMenu`);
-      ['locationFilterMenu'].forEach(id => {
+      ['locationFilterMenu', 'sortFilterMenu'].forEach(id => {
         const menu = document.getElementById(id);
         if (menu && menu !== active) menu.classList.add('hidden');
       });
-      active.classList.toggle('hidden');
+      if (active) active.classList.toggle('hidden');
     }
 
     function handleFilterOutsideClick(event) {
-      if (event.target.closest('#locationFilterButton, #locationFilterMenu')) return;
-      ['locationFilterMenu'].forEach(id => {
+      if (event.target.closest('#locationFilterButton, #locationFilterMenu, #sortFilterButton, #sortFilterMenu')) return;
+      ['locationFilterMenu', 'sortFilterMenu'].forEach(id => {
         const menu = document.getElementById(id);
         if (menu) menu.classList.add('hidden');
       });
@@ -2068,6 +2090,16 @@
       state.filters[type] = value;
       document.getElementById(`${type}FilterButton`).querySelector('span').innerText = label;
       document.getElementById(`${type}FilterMenu`).classList.add('hidden');
+      initFilters();
+      renderConcerts();
+    }
+
+    function selectSortOption(value, label) {
+      state.sortBy = value;
+      const button = document.getElementById('sortFilterButton');
+      if (button) button.querySelector('span').innerText = `Sort: ${label}`;
+      const menu = document.getElementById('sortFilterMenu');
+      if (menu) menu.classList.add('hidden');
       initFilters();
       renderConcerts();
     }
@@ -2098,6 +2130,24 @@
       });
     }
 
+    function sortConcerts(list) {
+      const sorted = [...list];
+      const tieBreak = (a, b) => a.id.localeCompare(b.id);
+      if (state.sortBy === 'date-asc') {
+        return sorted.sort((a, b) => a.dateKey.localeCompare(b.dateKey) || tieBreak(a, b));
+      }
+      if (state.sortBy === 'price-asc') {
+        return sorted.sort((a, b) => a.priceFrom - b.priceFrom || tieBreak(a, b));
+      }
+      if (state.sortBy === 'price-desc') {
+        return sorted.sort((a, b) => b.priceFrom - a.priceFrom || tieBreak(a, b));
+      }
+      if (state.sortBy === 'artist-asc') {
+        return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.dateKey.localeCompare(b.dateKey) || tieBreak(a, b));
+      }
+      return rotateConcertOrder(sorted);
+    }
+
     function renderConcerts() {
       const grid = document.getElementById('concertGrid');
       grid.innerHTML = '';
@@ -2114,9 +2164,7 @@
         return matchesLocation && matchesDate && matchesPrice && matchesSearch;
       };
 
-      const filtered = rotateConcertOrder(getPreviewCatalogConcerts().filter(matchesConcertFilters));
-      const displayConcerts = [...filtered];
-      const visibleConcerts = displayConcerts.slice(0, 150);
+      const visibleConcerts = sortConcerts(getPreviewCatalogConcerts().filter(matchesConcertFilters));
 
       document.getElementById('concertCount').innerText = visibleConcerts.length;
 
@@ -2129,7 +2177,7 @@
           <div>
             <!-- Image & Venue Badge -->
             <div class="relative h-48 w-full overflow-hidden bg-zinc-100">
-              <img src="${concert.image}" alt="${concert.artist}" onerror="this.onerror=null;this.src='${concert.imageFallback || getConcertFallbackImage(CONCERTS.indexOf(concert))}'" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+              <img src="${concert.image}" alt="${concert.artist}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${concert.imageFallback || getConcertFallbackImage(CONCERTS.indexOf(concert))}'" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
               <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10"></div>
               
               <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md border border-white/80 text-zinc-800 text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-sm">
