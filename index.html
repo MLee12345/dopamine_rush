@@ -2324,8 +2324,10 @@
       return Math.max(5.2, Math.min(base, 130 / Math.max(12, length)));
     }
 
-    function straightSectionLabel(section, x, y) {
-      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${shortSectionName(section)}</text>`;
+    function straightSectionLabel(section, x, y, style = '', transform = '') {
+      const styleAttr = style ? ` style="${style}"` : '';
+      const transformAttr = transform ? ` transform="${transform}"` : '';
+      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle"${styleAttr}${transformAttr}>${shortSectionName(section)}</text>`;
     }
 
     function curvedSectionLabel(section, pathId, base = 8.5) {
@@ -2350,44 +2352,59 @@
           <rect id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" x="68" y="78" width="164" height="26" rx="6" fill="${fill(middle.id)}" opacity="0.86"/>
           <rect id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" x="42" y="36" width="216" height="28" rx="6" fill="${fill(back.id)}" opacity="0.86"/>
           ${straightSectionLabel(front, 150, 130)}
-          ${straightSectionLabel(middle, 150, 91)}
-          ${straightSectionLabel(back, 150, 50)}
+          ${straightSectionLabel(middle, 150, 91, 'font-size:9.4px')}
+          ${straightSectionLabel(back, 150, 50, 'font-size:9.4px')}
         `,
         msg: `
+          <defs>
+            <path id="msg-front-label" d="M104 133 Q150 116 196 133"/>
+            <path id="msg-middle-label" d="M78 94 Q150 70 222 94"/>
+            <path id="msg-back-label" d="M50 52 Q150 20 250 52"/>
+          </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M90 130 Q150 108 210 130 L196 146 Q150 128 104 146 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M60 92 Q150 60 240 92 L222 108 Q150 82 78 108 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M30 54 Q150 12 270 54 L250 70 Q150 36 50 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 129)}
-          ${straightSectionLabel(middle, 150, 86)}
-          ${straightSectionLabel(back, 150, 43)}
+          ${curvedSectionLabel(front, 'msg-front-label')}
+          ${curvedSectionLabel(middle, 'msg-middle-label')}
+          ${curvedSectionLabel(back, 'msg-back-label')}
         `,
         redrocks: `
           ${stage}
           <polygon id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" points="94,130 206,122 216,142 84,150" fill="${fill(front.id)}" opacity="0.86"/>
           <polygon id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" points="63,90 237,78 250,99 50,111" fill="${fill(middle.id)}" opacity="0.86"/>
           <polygon id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" points="40,42 260,24 272,45 28,67" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 136)}
-          ${straightSectionLabel(middle, 150, 95)}
-          ${straightSectionLabel(back, 150, 46)}
+          ${straightSectionLabel(front, 150, 136, '', 'rotate(-4 150 136)')}
+          ${straightSectionLabel(middle, 150, 95, '', 'rotate(-4 150 95)')}
+          ${straightSectionLabel(back, 150, 46, '', 'rotate(-5 150 46)')}
         `,
         o2: `
+          <defs>
+            <path id="o2-front-label" d="M103 132 Q150 114 197 132"/>
+            <path id="o2-middle-label" d="M75 94 Q150 67 225 94"/>
+            <path id="o2-back-label" d="M44 52 Q150 15 256 52"/>
+          </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M88 130 Q150 106 212 130 L197 146 Q150 127 103 146 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M54 92 Q150 57 246 92 L225 108 Q150 80 75 108 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M20 54 Q150 9 280 54 L256 70 Q150 33 44 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 128)}
-          ${straightSectionLabel(middle, 150, 84)}
-          ${straightSectionLabel(back, 150, 41)}
+          ${curvedSectionLabel(front, 'o2-front-label')}
+          ${curvedSectionLabel(middle, 'o2-middle-label')}
+          ${curvedSectionLabel(back, 'o2-back-label')}
         `,
         hollywoodbowl: `
+          <defs>
+            <path id="hb-front-label" d="M105 133 Q150 117 195 133"/>
+            <path id="hb-middle-label" d="M80 94 Q150 70 220 94"/>
+            <path id="hb-back-label" d="M52 52 Q150 20 248 52"/>
+          </defs>
           ${stage}
           <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M92 130 Q150 109 208 130 L195 146 Q150 129 105 146 Z" fill="${fill(front.id)}" opacity="0.86"/>
           <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M62 92 Q150 61 238 92 L220 108 Q150 83 80 108 Z" fill="${fill(middle.id)}" opacity="0.86"/>
           <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M30 54 Q150 13 270 54 L248 70 Q150 37 52 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 130)}
-          ${straightSectionLabel(middle, 150, 86)}
-          ${straightSectionLabel(back, 150, 43)}
+          ${curvedSectionLabel(front, 'hb-front-label')}
+          ${curvedSectionLabel(middle, 'hb-middle-label')}
+          ${curvedSectionLabel(back, 'hb-back-label')}
         `
       };
       const curvedMapClass = ['msg', 'o2', 'hollywoodbowl'].includes(venue.id) ? 'venue-map-curved' : '';
