@@ -107,8 +107,8 @@
     }
     #stageViewport:fullscreen #stagePlaylistControls,
     #stageViewport:-webkit-full-screen #stagePlaylistControls {
-      flex: 1;
-      max-height: none;
+      flex: 0 0 auto;
+      max-height: calc(100vh - 190px);
       max-width: 380px;
       border-radius: 0.875rem;
     }
@@ -132,7 +132,7 @@
     .stage-spectrum-slider::-webkit-slider-runnable-track {
       height: 0.5rem;
       border-radius: 999px;
-      background: linear-gradient(90deg, #ef4444, #f59e0b, #facc15, #22c55e, #06b6d4, #4f46e5, #c084fc, #ef4444);
+      background: linear-gradient(90deg, hsl(0, 88%, 56%), hsl(60, 88%, 56%), hsl(120, 88%, 46%), hsl(180, 88%, 48%), hsl(240, 88%, 58%), hsl(300, 88%, 58%), hsl(360, 88%, 56%));
     }
     .stage-spectrum-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -155,7 +155,7 @@
     .stage-spectrum-slider::-moz-range-track {
       height: 0.5rem;
       border-radius: 999px;
-      background: linear-gradient(90deg, #ef4444, #f59e0b, #facc15, #22c55e, #06b6d4, #4f46e5, #c084fc, #ef4444);
+      background: linear-gradient(90deg, hsl(0, 88%, 56%), hsl(60, 88%, 56%), hsl(120, 88%, 46%), hsl(180, 88%, 48%), hsl(240, 88%, 58%), hsl(300, 88%, 58%), hsl(360, 88%, 56%));
     }
 
     /* Standard sleek hover without infinite pulsing */
@@ -2854,7 +2854,7 @@
       const audio = new Audio(track.streamUrl || track.previewUrl);
       audio.preload = 'none';
       audio.volume = 0.72;
-      audio.loop = Boolean(options.advanceStage);
+      audio.loop = false;
       const seekToRequestedOffset = () => {
         const offset = Number(options.startAtSeconds) || 0;
         if (!offset) return;
@@ -2874,6 +2874,10 @@
         if (icon) icon.className = 'fa-solid fa-pause';
         audio.addEventListener('ended', () => {
           if (state.previewAudio !== audio) return;
+          if (options.advanceStage && typeof options.onEnded === 'function') {
+            options.onEnded();
+            return;
+          }
           stopPreviewMusic();
         }, { once: true });
         return true;
@@ -3229,12 +3233,12 @@
             <span class="text-zinc-800">${formatMoney(tax)}</span>
           </div>
           ${dealLabel && discount > 0 ? `
-            <div class="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2">
+            <div>
               <div class="flex items-center justify-between gap-3">
-                <span class="text-teal-800 font-bold">Daily wheel deal: ${dealLabel}</span>
-                <span class="text-teal-700 font-extrabold">-${formatMoney(discount)}</span>
+                <span class="text-zinc-600">Daily wheel deal: ${dealLabel}</span>
+                <span class="text-zinc-800">-${formatMoney(discount)}</span>
               </div>
-              <div class="mt-0.5 text-[11px] font-semibold text-teal-700">${dealDetail}</div>
+              <div class="mt-0.5 text-[11px] font-semibold text-zinc-500">${dealDetail}</div>
             </div>
           ` : ''}
           <div class="flex items-center justify-between pt-3 border-t border-zinc-200">
@@ -3817,12 +3821,17 @@
       document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1} of ${state.selectedConcert.previewTracks.length}`;
       updatePreviewPlaybackUI();
       state.stageAudioLooping = true;
-      playPreviewMusic(idx, { context: 'stage', advanceStage: true, startAtSeconds });
-      const trackDurationMs = remainingMs || getTrackDuration(state.selectedConcert.previewTracks[idx]) * 1000;
-      state.stageTrackTimer = setTimeout(() => {
+      const advanceToNextTrack = () => {
+        if (state.stageTrackTimer) {
+          clearTimeout(state.stageTrackTimer);
+          state.stageTrackTimer = null;
+        }
         if (idx < (state.selectedConcert?.previewTracks?.length || 0) - 1) playStageTrack(idx + 1);
         else finishStagePlaylist(true);
-      }, trackDurationMs);
+      };
+      playPreviewMusic(idx, { context: 'stage', advanceStage: true, startAtSeconds, onEnded: advanceToNextTrack });
+      const trackDurationMs = remainingMs || getTrackDuration(state.selectedConcert.previewTracks[idx]) * 1000;
+      state.stageTrackTimer = setTimeout(advanceToNextTrack, trackDurationMs);
     }
 
     function completeStageSession(concertId, options = {}) {
@@ -4494,9 +4503,9 @@
     function getStageWavePalette() {
       const hue = Number(state.stageWaveHue) || 0;
       return [
-        `hsl(${hue}, 95%, 92%)`,
-        `hsl(${(hue + 22) % 360}, 88%, 64%)`,
-        `hsl(${(hue + 52) % 360}, 86%, 48%)`
+        `hsl(${hue}, 95%, 88%)`,
+        `hsl(${hue}, 88%, 60%)`,
+        `hsl(${hue}, 86%, 45%)`
       ];
     }
 
@@ -4548,17 +4557,26 @@
     function updateStageViewerCount() {
       const viewer = document.getElementById('stageViewerCount');
       if (!viewer) return;
-      viewer.innerText = Math.max(1200, Math.round(state.stageViewerCount)).toLocaleString();
+      viewer.innerText = Math.max(1, Math.round(state.stageViewerCount)).toLocaleString();
+    }
+
+    function getStageViewerBounds(concert) {
+      const capacity = VENUES[concert?.venueId]?.capacity || 12000;
+      return {
+        min: Math.max(250, Math.round(capacity * 0.34)),
+        max: Math.max(500, Math.round(capacity * 0.94))
+      };
     }
 
     function startStageViewerTicker(concert) {
       if (state.stageViewerTimer) clearInterval(state.stageViewerTimer);
       const seed = seededRandom(`${concert.id}-viewers`)();
-      state.stageViewerCount = 8200 + Math.round(seed * 16000);
+      const bounds = getStageViewerBounds(concert);
+      state.stageViewerCount = bounds.min + Math.round(seed * (bounds.max - bounds.min));
       updateStageViewerCount();
       state.stageViewerTimer = setInterval(() => {
-        const drift = Math.round((Math.random() - 0.42) * 360);
-        state.stageViewerCount = Math.max(1200, state.stageViewerCount + drift);
+        const drift = Math.round((Math.random() - 0.42) * Math.max(48, bounds.max * 0.018));
+        state.stageViewerCount = Math.min(bounds.max, Math.max(bounds.min, state.stageViewerCount + drift));
         updateStageViewerCount();
       }, 5200);
     }
