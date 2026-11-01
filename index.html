@@ -323,7 +323,7 @@
         </button>
         <button onclick="openWalletModal()" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold text-zinc-700 bg-white border border-zinc-300 hover:border-indigo-400 transition-colors">
           <i class="fa-solid fa-wallet text-indigo-600"></i>
-          <span id="walletBalanceText">$0</span>
+          <span id="walletBalanceText">$0.00</span>
         </button>
         <button onclick="navigateTo('discover')" id="nav-discover" class="px-3 py-2 rounded-full text-sm font-semibold transition-colors text-white bg-indigo-700 border border-indigo-700">
           <i class="fa-solid fa-compass mr-1.5"></i> Discover
@@ -500,7 +500,7 @@
             <div id="dateFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 w-72 bg-white border border-indigo-200 rounded-xl p-2"></div>
           </div>
           <div class="h-full min-h-[58px] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950">
-            <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0–$300</span></div>
+            <div class="flex justify-between"><span>Price</span><span id="priceRangeLabel">$0.00–$300.00</span></div>
             <div class="price-range-wrap mt-1">
               <div class="price-track"></div>
               <div id="priceRangeActive" class="price-range-active"></div>
@@ -646,7 +646,7 @@
 
             <div class="flex items-center justify-between pt-3 border-t border-zinc-200">
               <span class="text-base text-zinc-500">Reservation Total</span>
-              <span id="ticketTotalPrice" class="text-3xl font-extrabold text-indigo-700">$0</span>
+              <span id="ticketTotalPrice" class="text-3xl font-extrabold text-indigo-700">$0.00</span>
             </div>
 
             <button onclick="confirmTicketPurchase()" class="w-full py-3.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-base rounded-lg transition-all flex items-center justify-center gap-2">
@@ -726,6 +726,10 @@
         <!-- Interactive Visualizer Canvas -->
         <canvas id="stageCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
 
+        <button onclick="openMerchQueueForCurrentStage()" class="absolute right-4 top-4 sm:right-6 sm:top-6 z-20 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+          <i class="fa-solid fa-bag-shopping"></i> Merch
+        </button>
+
         <!-- Artist Playlist Controls -->
         <div class="relative z-10 p-4 sm:p-6 flex justify-start items-start pointer-events-none h-full">
           <div id="stagePlaylistControls" class="pointer-events-auto flex max-h-full w-full max-w-xs flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
@@ -748,11 +752,7 @@
             </div>
           </div>
 
-          <div class="flex items-center space-x-2">
-            <button onclick="openMerchQueueForCurrentStage()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-              <i class="fa-solid fa-bag-shopping"></i> Merch
-            </button>
-          </div>
+          <div></div>
         </div>
       </div>
     </section>
@@ -884,16 +884,16 @@
         <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
           <div class="text-xs text-zinc-500 uppercase font-bold">Balance</div>
           <div id="walletModalBalance" class="text-4xl font-extrabold text-white">$0</div>
-          <div class="text-xs text-zinc-500 mt-1"><span id="siteTimeText">0:00</span> on site. Wallet gets $5 every 45 seconds.</div>
+          <div class="text-xs text-zinc-500 mt-1"><span id="siteTimeText">0:00</span> on site. Wallet gets $5.00 every 45 seconds.</div>
         </div>
         <div class="grid grid-cols-4 gap-2">
-          <button onclick="addWalletMoney(10)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$10</button>
-          <button onclick="addWalletMoney(25)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$25</button>
-          <button onclick="addWalletMoney(50)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$50</button>
-          <button onclick="addWalletMoney(100)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$100</button>
+          <button onclick="addWalletMoney(10)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$10.00</button>
+          <button onclick="addWalletMoney(25)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$25.00</button>
+          <button onclick="addWalletMoney(50)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$50.00</button>
+          <button onclick="addWalletMoney(100)" class="py-2 bg-zinc-100 text-zinc-950 rounded-md text-xs font-bold">$100.00</button>
         </div>
         <div class="flex gap-2">
-          <input id="customWalletAmount" type="number" min="1" placeholder="Custom amount" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500">
+          <input id="customWalletAmount" type="number" min="0.01" step="0.01" placeholder="Custom amount" class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500">
           <button onclick="addCustomWalletMoney()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-lg text-sm font-bold">Add</button>
         </div>
       </div>
@@ -1437,6 +1437,42 @@
 
     generateYearRoundConcerts(500);
 
+    function roundMoney(value) {
+      return Math.round(Number(value || 0) * 100) / 100;
+    }
+
+    function formatMoney(value) {
+      return `$${roundMoney(value).toFixed(2)}`;
+    }
+
+    function centsForKey(key) {
+      let hash = 0;
+      String(key).split('').forEach(char => {
+        hash = (hash * 31 + char.charCodeAt(0)) % 100;
+      });
+      return hash / 100;
+    }
+
+    function addDeterministicCents(value, key) {
+      return roundMoney(Number(value || 0) + centsForKey(key));
+    }
+
+    function applyCentsToCatalog() {
+      Object.values(VENUES).forEach(venue => {
+        venue.sections.forEach(section => {
+          section.price = addDeterministicCents(section.price, `${venue.id}-${section.id}`);
+        });
+      });
+      CONCERTS.forEach(concert => {
+        concert.priceFrom = addDeterministicCents(concert.priceFrom, `${concert.id}-from`);
+        concert.merch.forEach(item => {
+          item.price = addDeterministicCents(item.price, `${concert.id}-${item.id}`);
+        });
+      });
+    }
+
+    applyCentsToCatalog();
+
     CONCERTS.forEach((concert, idx) => {
       concert.image = getUniqueConcertImage(idx, concert.genre);
       concert.imageFallback = getConcertFallbackImage(idx);
@@ -1627,6 +1663,7 @@
       holdProgress: 0,
       audioCtx: null,
       previewAudio: null,
+      stageAudioLooping: false,
       previewTrackIndex: -1,
       previewContext: '',
       stageEnded: false,
@@ -2073,7 +2110,7 @@
       state.filters.dateEnd = state.filters.dateEnd || '';
       ['priceMinFilter', 'priceMaxFilter'].forEach(id => {
         const input = document.getElementById(id);
-        input.min = min; input.max = max; input.step = 5;
+        input.min = min; input.max = max; input.step = 0.01;
       });
       document.getElementById('priceMinFilter').value = state.filters.priceMin;
       document.getElementById('priceMaxFilter').value = state.filters.priceMax;
@@ -2319,7 +2356,7 @@
           <div class="p-5 pt-0 flex items-center justify-between gap-3">
             <div>
               <span class="text-[10px] text-zinc-500 block uppercase">From</span>
-              <span class="text-lg font-extrabold text-zinc-950">$${concert.priceFrom}</span>
+              <span class="text-lg font-extrabold text-zinc-950">${formatMoney(concert.priceFrom)}</span>
             </div>
             <button onclick="openTicketModal('${concert.id}')" class="px-5 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-xs rounded-md transition-all shadow-md">
               See Tickets
@@ -2352,7 +2389,7 @@
     }
 
     function updatePriceRangeLabel() {
-      document.getElementById('priceRangeLabel').innerText = `$${state.filters.priceMin}–$${state.filters.priceMax}`;
+      document.getElementById('priceRangeLabel').innerText = `${formatMoney(state.filters.priceMin)}–${formatMoney(state.filters.priceMax)}`;
       const minInput = document.getElementById('priceMinFilter');
       const maxInput = document.getElementById('priceMaxFilter');
       const active = document.getElementById('priceRangeActive');
@@ -2469,16 +2506,16 @@
 
     function getStageTrackTiming(concert, elapsedSeconds = 0) {
       const tracks = concert?.previewTracks || [];
-      if (!tracks.length) return { index: 0, remainingMs: 30000 };
+      if (!tracks.length) return { index: 0, elapsedInTrack: 0, remainingMs: 30000 };
       let elapsed = Math.max(0, elapsedSeconds);
       for (let index = 0; index < tracks.length; index++) {
         const duration = getTrackDuration(tracks[index]);
         if (elapsed < duration) {
-          return { index, remainingMs: Math.max(1000, (duration - elapsed) * 1000) };
+          return { index, elapsedInTrack: elapsed, remainingMs: Math.max(1000, (duration - elapsed) * 1000) };
         }
         elapsed -= duration;
       }
-      return { index: tracks.length - 1, remainingMs: 1000 };
+      return { index: tracks.length - 1, elapsedInTrack: getTrackDuration(tracks.at(-1)), remainingMs: 1000 };
     }
 
     function formatClock(seconds) {
@@ -2715,6 +2752,14 @@
       const audio = new Audio(track.streamUrl || track.previewUrl);
       audio.preload = 'none';
       audio.volume = 0.72;
+      const seekToRequestedOffset = () => {
+        const offset = Number(options.startAtSeconds) || 0;
+        if (!offset) return;
+        const loopLength = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 30;
+        try { audio.currentTime = Math.min(Math.max(0, offset % loopLength), Math.max(0, loopLength - 0.15)); } catch (error) {}
+      };
+      audio.addEventListener('loadedmetadata', seekToRequestedOffset, { once: true });
+      seekToRequestedOffset();
       state.previewAudio = audio;
       state.previewTrackIndex = idx;
       state.previewContext = options.context || (state.activeTab === 'stage' ? 'stage' : 'ticket');
@@ -2728,6 +2773,10 @@
           if (state.previewAudio !== audio) return;
           if (options.advanceStage) {
             isAudioPlaying = true;
+            if (state.stageAudioLooping) {
+              try { audio.currentTime = 0; } catch (error) {}
+              audio.play().catch(() => {});
+            }
             updatePreviewPlaybackUI();
           } else {
             stopPreviewMusic();
@@ -2764,6 +2813,7 @@
       }
       state.previewTrackIndex = -1;
       state.previewContext = '';
+      state.stageAudioLooping = false;
       isAudioPlaying = false;
       updatePreviewPlaybackUI();
       const icon = document.getElementById('audioIcon');
@@ -2919,7 +2969,7 @@
             <div class="text-xs text-zinc-500 mt-0.5">${isSoldOut ? 'Sold out' : `${sec.seatsAvailable} passes available`}</div>
           </div>
           <div class="text-right">
-            <div class="text-lg font-extrabold text-indigo-700">$${sec.price}</div>
+            <div class="text-lg font-extrabold text-indigo-700">${formatMoney(sec.price)}</div>
             <div class="text-[11px] text-zinc-500">per pass</div>
           </div>
         `;
@@ -2968,8 +3018,8 @@
         const qtyText = document.getElementById('ticketQtyText');
         if (qtyText) qtyText.innerText = state.selectedQty;
       }
-      const total = state.selectedSection.price * state.selectedQty;
-      document.getElementById('ticketTotalPrice').innerText = `$${total}`;
+      const total = roundMoney(state.selectedSection.price * state.selectedQty);
+      document.getElementById('ticketTotalPrice').innerText = formatMoney(total);
     }
 
     function confirmTicketPurchase() {
@@ -2981,7 +3031,7 @@
         concertId: state.selectedConcert.id,
         sectionName: state.selectedSection.name,
         qty: state.selectedQty,
-        totalPaid: state.selectedSection.price * state.selectedQty,
+        totalPaid: roundMoney(state.selectedSection.price * state.selectedQty),
         priceEach: state.selectedSection.price
       };
 
@@ -3064,32 +3114,32 @@
         <div class="mt-6 space-y-3 text-sm">
           ${shortfall > 0 ? `
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
-              <i class="fa-solid fa-wallet mr-1.5"></i>Add $${shortfall.toFixed(2)} more to your wallet to buy these tickets.
+              <i class="fa-solid fa-wallet mr-1.5"></i>Add ${formatMoney(shortfall)} more to your wallet to buy these tickets.
             </div>
           ` : ''}
           <div class="flex items-center justify-between border-b border-zinc-200 pb-3">
             <span class="text-zinc-600">${state.pendingCheckout.sectionName}</span>
-            <span class="text-zinc-950 font-semibold">${state.pendingCheckout.qty} x $${state.pendingCheckout.priceEach}</span>
+            <span class="text-zinc-950 font-semibold">${state.pendingCheckout.qty} x ${formatMoney(state.pendingCheckout.priceEach)}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-zinc-600">Tickets</span>
-            <span class="text-zinc-800">$${state.pendingCheckout.totalPaid.toFixed(2)}</span>
+            <span class="text-zinc-800">${formatMoney(state.pendingCheckout.totalPaid)}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-zinc-600">Service and venue fees</span>
-            <span class="text-zinc-800">$${fees.toFixed(2)}</span>
+            <span class="text-zinc-800">${formatMoney(fees)}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-zinc-600">Tax (${formatTaxRate()})</span>
-            <span class="text-zinc-800">$${tax.toFixed(2)}</span>
+            <span class="text-zinc-800">${formatMoney(tax)}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-zinc-600">Daily wheel deal (${formatAppliedDealLabel(discount)})</span>
-            <span class="text-teal-700">-$${discount.toFixed(2)}</span>
+            <span class="text-teal-700">-${formatMoney(discount)}</span>
           </div>
           <div class="flex items-center justify-between pt-3 border-t border-zinc-200">
             <span class="text-zinc-950 font-bold">Total charge</span>
-            <span class="text-2xl font-extrabold text-indigo-700">$${finalTotal.toFixed(2)}</span>
+            <span class="text-2xl font-extrabold text-indigo-700">${formatMoney(finalTotal)}</span>
           </div>
         </div>
       `;
@@ -3097,12 +3147,12 @@
 
     function calculateTicketPayment() {
       const subtotal = state.pendingCheckout ? state.pendingCheckout.totalPaid : 0;
-      const fees = Math.round(subtotal * 0.12 * 100) / 100;
-      const pctDiscount = Math.round(subtotal * (state.discountPct / 100) * 100) / 100;
-      const discount = Math.min(subtotal + fees, Math.max(pctDiscount, state.discountFlat));
+      const fees = roundMoney(subtotal * 0.12);
+      const pctDiscount = roundMoney(subtotal * (state.discountPct / 100));
+      const discount = roundMoney(Math.min(subtotal + fees, Math.max(pctDiscount, state.discountFlat)));
       const taxableTotal = Math.max(0, subtotal + fees - discount);
-      const tax = Math.round(taxableTotal * TAX_RATE * 100) / 100;
-      const finalTotal = Math.max(0, taxableTotal + tax);
+      const tax = roundMoney(taxableTotal * TAX_RATE);
+      const finalTotal = roundMoney(Math.max(0, taxableTotal + tax));
       return { fees, tax, discount, finalTotal, walletUsed: finalTotal, cardTotal: finalTotal };
     }
 
@@ -3112,7 +3162,7 @@
 
     function formatAppliedDealLabel(discount) {
       if (state.discountPct > 0) return `${state.discountPct}% off`;
-      if (state.discountFlat > 0) return `$${Math.min(state.discountFlat, discount).toFixed(2)} off`;
+      if (state.discountFlat > 0) return `${formatMoney(Math.min(state.discountFlat, discount))} off`;
       return 'none';
     }
 
@@ -3127,7 +3177,7 @@
     function ensureWalletCanCover(total) {
       if (state.walletBalance >= total) return true;
       const shortfall = Math.max(0, total - state.walletBalance);
-      showToast(`Add $${shortfall.toFixed(2)} more to your wallet to complete this purchase.`, 'info');
+      showToast(`Add ${formatMoney(shortfall)} more to your wallet to complete this purchase.`, 'info');
       openWalletModal();
       return false;
     }
@@ -3213,7 +3263,7 @@
       const payment = calculateTicketPayment();
       if (!ensureWalletCanCover(payment.finalTotal)) return;
       if (purchasedSection) purchasedSection.seatsAvailable = Math.max(3, purchasedSection.seatsAvailable - state.pendingCheckout.qty);
-      state.walletBalance = Math.max(0, state.walletBalance - payment.finalTotal);
+      state.walletBalance = roundMoney(Math.max(0, state.walletBalance - payment.finalTotal));
       const existingTicket = state.userTickets.find(t => t.concertId === state.pendingCheckout.concertId);
       const newTicket = {
         ticketId: 't-' + Math.floor(1000 + Math.random() * 9000),
@@ -3439,7 +3489,7 @@
           id: `${entry.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
           name: entry.name,
           qty: entry.qty,
-          total: entry.price * entry.qty,
+        total: roundMoney(entry.price * entry.qty),
           size: entry.size,
           color: entry.color,
           img: entry.img,
@@ -3468,7 +3518,7 @@
             <div class="font-bold text-white">${item.name}${item.qty > 1 ? ` <span class="text-zinc-400 text-xs">x${item.qty}</span>` : ''}</div>
             <div class="text-xs text-zinc-400">${item.concert} • ${item.size || 'Size'} / ${item.color || 'Color'}</div>
           </div>
-          <div class="text-sm font-extrabold text-emerald-300">$${item.total}</div>
+          <div class="text-sm font-extrabold text-emerald-300">${formatMoney(item.total)}</div>
         </div>
       `).join('') : `<div class="text-sm text-zinc-400 bg-white/5 border border-white/10 rounded-xl p-4">Your booth wins will appear here.</div>`;
     }
@@ -3502,7 +3552,7 @@
         renderStagePlaylist(concert);
         const elapsedSeconds = Math.max(0, (Date.now() - session.startedAt) / 1000);
         const timing = getStageTrackTiming(concert, elapsedSeconds);
-        playStageTrack(timing.index, timing.remainingMs);
+        playStageTrack(timing.index, timing.remainingMs, timing.elapsedInTrack);
       } else {
         document.getElementById('stagePlaylistControls').innerHTML = `<div class="px-3 py-2 text-xs text-zinc-400">Loading official music…</div>`;
         document.getElementById('stageTrackTitle').innerText = `Loading ${concert.artist} previews…`;
@@ -3513,7 +3563,7 @@
           if (tracks.length) {
             const elapsedSeconds = Math.max(0, (Date.now() - session.startedAt) / 1000);
             const timing = getStageTrackTiming(concert, elapsedSeconds);
-            playStageTrack(timing.index, timing.remainingMs);
+            playStageTrack(timing.index, timing.remainingMs, timing.elapsedInTrack);
           }
         });
       }
@@ -3604,7 +3654,7 @@
       }
     }
 
-    function playStageTrack(idx = 0, remainingMs = null) {
+    function playStageTrack(idx = 0, remainingMs = null, startAtSeconds = 0) {
       const track = getArtistPlaylist(state.selectedConcert)[idx];
       if (!track) return;
       if (state.stageTrackTimer) {
@@ -3616,7 +3666,8 @@
       document.getElementById('stageTrackTitle').innerText = track;
       document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1} of ${state.selectedConcert.previewTracks.length}`;
       updatePreviewPlaybackUI();
-      playPreviewMusic(idx, { context: 'stage', advanceStage: true });
+      state.stageAudioLooping = true;
+      playPreviewMusic(idx, { context: 'stage', advanceStage: true, startAtSeconds });
       const trackDurationMs = remainingMs || getTrackDuration(state.selectedConcert.previewTracks[idx]) * 1000;
       state.stageTrackTimer = setTimeout(() => {
         if (idx < (state.selectedConcert?.previewTracks?.length || 0) - 1) playStageTrack(idx + 1);
@@ -4050,8 +4101,8 @@
         const item = state.activeMerchConcert.merch.find(m => m.id === entry.itemId);
         return item ? sum + item.price * entry.qty : sum;
       }, 0);
-      const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
-      const finalTotal = subtotal + tax;
+      const tax = roundMoney(subtotal * TAX_RATE);
+      const finalTotal = roundMoney(subtotal + tax);
       return { subtotal, tax, finalTotal, walletUsed: finalTotal, cardTotal: finalTotal };
     }
 
@@ -4103,7 +4154,7 @@
         }
         row.querySelector('[data-merch-copy]').innerHTML = `
           <div class="text-xs font-bold text-white">${item.name}${qty > 1 ? ` <span class="text-zinc-400">x${qty}</span>` : ''}</div>
-          <div class="text-xs text-emerald-400 font-semibold">$${item.price}${state.merchPreviewOnly ? '' : ` <span class="ml-1 text-amber-300">Only ${stock} left</span>`}</div>
+          <div class="text-xs text-emerald-400 font-semibold">${formatMoney(item.price)}${state.merchPreviewOnly ? '' : ` <span class="ml-1 text-amber-300">Only ${stock} left</span>`}</div>
           ${variants}
           ${controls}
         `;
@@ -4156,7 +4207,7 @@
 
     function updateMerchCartTotal() {
       const payment = calculateMerchPayment();
-      document.getElementById('merchTotalText').innerText = `$${payment.finalTotal.toFixed(2)}`;
+      document.getElementById('merchTotalText').innerText = formatMoney(payment.finalTotal);
     }
 
     function beginMerchCheckout() {
@@ -4193,13 +4244,13 @@
         const item = state.activeMerchConcert.merch.find(m => m.id === entry.itemId);
         if (!item) return '';
         const qtyLabel = entry.qty > 1 ? `<span class="text-zinc-500 ml-1">x${entry.qty}</span>` : '';
-        return `<div class="flex items-center justify-between gap-3 text-sm"><span class="text-zinc-300">${item.name}${qtyLabel} <span class="text-zinc-500">${entry.size} / ${entry.color}</span></span><span class="font-bold text-white">$${(item.price * entry.qty).toFixed(2)}</span></div>`;
+        return `<div class="flex items-center justify-between gap-3 text-sm"><span class="text-zinc-300">${item.name}${qtyLabel} <span class="text-zinc-500">${entry.size} / ${entry.color}</span></span><span class="font-bold text-white">${formatMoney(item.price * entry.qty)}</span></div>`;
       }).join('');
       container.innerHTML = `
         <div class="space-y-2">${rows}</div>
-        <div class="flex items-center justify-between pt-3 border-t border-zinc-800"><span class="text-zinc-400 text-sm">Merch</span><span class="font-bold text-white">$${payment.subtotal.toFixed(2)}</span></div>
-        <div class="flex items-center justify-between"><span class="text-zinc-400 text-sm">Tax (${formatTaxRate()})</span><span class="font-bold text-white">$${payment.tax.toFixed(2)}</span></div>
-        <div class="flex items-center justify-between pt-3 border-t border-zinc-800"><span class="text-zinc-300 text-sm font-bold">Total charge</span><span class="text-2xl font-black text-emerald-400">$${payment.finalTotal.toFixed(2)}</span></div>
+        <div class="flex items-center justify-between pt-3 border-t border-zinc-800"><span class="text-zinc-400 text-sm">Merch</span><span class="font-bold text-white">${formatMoney(payment.subtotal)}</span></div>
+        <div class="flex items-center justify-between"><span class="text-zinc-400 text-sm">Tax (${formatTaxRate()})</span><span class="font-bold text-white">${formatMoney(payment.tax)}</span></div>
+        <div class="flex items-center justify-between pt-3 border-t border-zinc-800"><span class="text-zinc-300 text-sm font-bold">Total charge</span><span class="text-2xl font-black text-emerald-400">${formatMoney(payment.finalTotal)}</span></div>
       `;
     }
 
@@ -4242,7 +4293,7 @@
       }).filter(Boolean);
       const payment = calculateMerchPayment();
       if (!ensureWalletCanCover(payment.finalTotal)) return;
-      state.walletBalance = Math.max(0, state.walletBalance - payment.finalTotal);
+      state.walletBalance = roundMoney(Math.max(0, state.walletBalance - payment.finalTotal));
       recordMerchHistory(purchasedItems, state.activeMerchConcert);
       purchasedItems.forEach(item => {
         const stockKey = `${state.activeMerchConcert.id}-${item.id}`;
@@ -4374,20 +4425,21 @@
        9. UTILITY TOAST NOTIFICATIONS
        ========================================================================== */
     const SPEND_POPUPS = [
-      { name: 'Avery', city: 'Seattle', item: 'bought 2 floor passes', amount: 420 },
-      { name: 'Jordan', city: 'Austin', item: 'added a tour hoodie', amount: 85 },
-      { name: 'Mia', city: 'Chicago', item: 'upgraded to lower bowl', amount: 330 },
-      { name: 'Noah', city: 'Brooklyn', item: 'checked out with merch', amount: 128 },
-      { name: 'Sam', city: 'Los Angeles', item: 'reserved VIP seats', amount: 560 }
+      { name: 'Avery', city: 'Seattle', item: 'bought 2 floor passes', amount: 420.37 },
+      { name: 'Jordan', city: 'Austin', item: 'added a tour hoodie', amount: 85.49 },
+      { name: 'Mia', city: 'Chicago', item: 'upgraded to lower bowl', amount: 330.82 },
+      { name: 'Noah', city: 'Brooklyn', item: 'checked out with merch', amount: 128.16 },
+      { name: 'Sam', city: 'Los Angeles', item: 'reserved VIP seats', amount: 560.24 }
     ];
 
     function updateWalletUI() {
-      localStorage.setItem(scopedStorageKey('dopamineWallet'), state.walletBalance.toFixed(0));
+      state.walletBalance = roundMoney(state.walletBalance);
+      localStorage.setItem(scopedStorageKey('dopamineWallet'), state.walletBalance.toFixed(2));
       localStorage.setItem(scopedStorageKey('dopamineDiscount'), state.discountPct.toString());
       localStorage.setItem(scopedStorageKey('dopamineDiscountFlat'), state.discountFlat.toString());
       localStorage.setItem(scopedStorageKey('dopamineLastSpin'), state.lastSpinDate);
       localStorage.setItem(scopedStorageKey('dopamineDealLabel'), state.activeDealLabel);
-      const walletText = `$${state.walletBalance.toFixed(0)}`;
+      const walletText = formatMoney(state.walletBalance);
       document.getElementById('walletBalanceText').innerText = walletText;
       const modalBalance = document.getElementById('walletModalBalance');
       if (modalBalance) modalBalance.innerText = walletText;
@@ -4405,9 +4457,9 @@
     }
 
     function addWalletMoney(amount, quiet = false) {
-      state.walletBalance += amount;
+      state.walletBalance = roundMoney(state.walletBalance + Number(amount || 0));
       updateWalletUI();
-      if (!quiet) showToast(`$${amount} added to wallet.`, 'success');
+      if (!quiet) showToast(`${formatMoney(amount)} added to wallet.`, 'success');
     }
 
     function openWalletModal() {
@@ -4421,7 +4473,7 @@
 
     function addCustomWalletMoney() {
       const input = document.getElementById('customWalletAmount');
-      const amount = Math.max(0, Math.round(Number(input.value || 0)));
+      const amount = roundMoney(Math.max(0, Number(input.value || 0)));
       if (!amount) {
         showToast('Enter a wallet amount first.', 'info');
         return;
@@ -4484,7 +4536,7 @@
         if (siteTime) siteTime.innerText = `${mins}:${secs}`;
         if (state.siteSeconds % 45 === 0) {
           addWalletMoney(5, true);
-          showToast('$5 site-time reward added to wallet.', 'success');
+          showToast(`${formatMoney(5)} site-time reward added to wallet.`, 'success');
         }
       }, 1000);
     }
@@ -4581,7 +4633,7 @@
       state.discountPct = deal.discount;
       state.discountFlat = deal.flat || 0;
       state.activeDealLabel = deal.fullLabel || deal.label;
-      if (deal.wallet) state.walletBalance += deal.wallet;
+      if (deal.wallet) state.walletBalance = roundMoney(state.walletBalance + deal.wallet);
       state.lastSpinDate = today;
       state.wheelSpinning = true;
       state.deferWheelLock = true;
@@ -4684,7 +4736,7 @@
           </div>
           <div>
             <div class="font-bold text-white">${event.name} in ${event.city}</div>
-            <div class="text-zinc-400">${event.item} • <span class="text-emerald-400 font-semibold">$${event.amount}</span></div>
+            <div class="text-zinc-400">${event.item} • <span class="text-emerald-400 font-semibold">${formatMoney(event.amount)}</span></div>
           </div>
         </div>
       `;
