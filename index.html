@@ -713,9 +713,6 @@
         </div>
 
         <div class="flex items-center space-x-3">
-          <button onclick="openMerchQueueForCurrentStage()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-lg text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-            <i class="fa-solid fa-bag-shopping"></i> Merch
-          </button>
           <div class="flex items-center gap-2 bg-red-950/80 border border-red-500/40 text-red-400 text-xs font-bold px-3 py-1 rounded-full">
             <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
             <span>LIVE STAGE BROADCAST</span>
@@ -753,7 +750,7 @@
 
           <div class="flex items-center space-x-2">
             <button onclick="openMerchQueueForCurrentStage()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-              <i class="fa-solid fa-bag-shopping"></i> Merch Queue
+              <i class="fa-solid fa-bag-shopping"></i> Merch
             </button>
           </div>
         </div>
@@ -761,6 +758,19 @@
     </section>
 
   </main>
+
+  <div id="concertEndedModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl bg-zinc-950 border border-zinc-800 p-6 text-center shadow-2xl">
+      <div class="w-14 h-14 mx-auto rounded-full bg-emerald-500 text-zinc-950 grid place-items-center text-2xl mb-4">
+        <i class="fa-solid fa-music"></i>
+      </div>
+      <h3 class="text-2xl font-black text-white">Concert has ended</h3>
+      <p id="concertEndedMessage" class="text-sm text-zinc-400 mt-2">The full playlist has finished.</p>
+      <button onclick="exitEndedStage()" class="mt-6 w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-black transition-colors">
+        Exit Stage
+      </button>
+    </div>
+  </div>
 
   <!-- MODAL 2: MERCH QUEUE & EMBEDDED SHOPPING ENGINE -->
   <div id="merchModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
@@ -1621,6 +1631,8 @@
       previewContext: '',
       stageEnded: false,
       stageSessionTimer: null,
+      stageExpiryTimer: null,
+      stageExpirySweepTimer: null,
       artistPreviewCache: new Map()
     };
     const TAX_RATE = 0.0875;
@@ -1647,6 +1659,7 @@
       updateTicketBadge();
       updateWalletUI();
       initStageVisualizer();
+      startStageExpirySweep();
       updateAccountUI();
       document.addEventListener('click', handleFilterOutsideClick);
       document.addEventListener('click', handleMerchDropdownOutsideClick);
@@ -2454,6 +2467,20 @@
       return tracks.reduce((sum, track) => sum + getTrackDuration(track), 0);
     }
 
+    function getStageTrackTiming(concert, elapsedSeconds = 0) {
+      const tracks = concert?.previewTracks || [];
+      if (!tracks.length) return { index: 0, remainingMs: 30000 };
+      let elapsed = Math.max(0, elapsedSeconds);
+      for (let index = 0; index < tracks.length; index++) {
+        const duration = getTrackDuration(tracks[index]);
+        if (elapsed < duration) {
+          return { index, remainingMs: Math.max(1000, (duration - elapsed) * 1000) };
+        }
+        elapsed -= duration;
+      }
+      return { index: tracks.length - 1, remainingMs: 1000 };
+    }
+
     function formatClock(seconds) {
       const safeSeconds = Math.max(0, Math.floor(seconds || 0));
       const minutes = Math.floor(safeSeconds / 60);
@@ -2485,17 +2512,20 @@
       persistStageSessions(sessions);
     }
 
-    function expireCompletedStageSessions() {
+    function expireCompletedStageSessions(options = {}) {
       const sessions = getStageSessions();
-      let changed = false;
       Object.entries(sessions).forEach(([concertId, session]) => {
         if (session.endsAt > Date.now()) return;
-        const concert = CONCERTS.find(item => item.id === concertId);
-        if (concert) concert.isEnded = true;
-        delete sessions[concertId];
-        changed = true;
+        completeStageSession(concertId, {
+          showModal: state.activeTab === 'stage' && state.selectedConcert?.id === concertId,
+          refreshTickets: options.refreshTickets !== false
+        });
       });
-      if (changed) persistStageSessions(sessions);
+    }
+
+    function startStageExpirySweep() {
+      if (state.stageExpirySweepTimer) clearInterval(state.stageExpirySweepTimer);
+      state.stageExpirySweepTimer = setInterval(expireCompletedStageSessions, 1000);
     }
 
     function normalizeArtistName(value) {
@@ -3236,7 +3266,7 @@
     }
 
     function pruneEndedTickets() {
-      expireCompletedStageSessions();
+      expireCompletedStageSessions({ refreshTickets: false });
       state.userTickets = state.userTickets.filter(t => {
         const concert = CONCERTS.find(c => c.id === t.concertId);
         return concert && !concert.isEnded;
@@ -3444,12 +3474,17 @@
     }
 
     function enterLiveStage(concertId) {
+      expireCompletedStageSessions();
       const concert = CONCERTS.find(c => c.id === concertId);
+      if (!concert || concert.isEnded) {
+        showToast('This concert has already ended.', 'info');
+        navigateTo('tickets');
+        return;
+      }
       const venue = VENUES[concert.venueId];
       const enteringTickets = state.userTickets.filter(ticket => ticket.concertId === concertId);
       enteringTickets.forEach(ticket => recordConcertHistory(ticket));
       if (enteringTickets.length) {
-        state.userTickets = state.userTickets.filter(ticket => ticket.concertId !== concertId);
         persistTickets();
         updateTicketBadge();
         showToast('Pass scanned. This show is now in your attended concerts.', 'success');
@@ -3463,17 +3498,23 @@
       navigateTo('stage');
 
       if (concert.previewTracks?.length) {
-        beginStageSession(concert);
+        const session = beginStageSession(concert);
         renderStagePlaylist(concert);
-        playStageTrack(0);
+        const elapsedSeconds = Math.max(0, (Date.now() - session.startedAt) / 1000);
+        const timing = getStageTrackTiming(concert, elapsedSeconds);
+        playStageTrack(timing.index, timing.remainingMs);
       } else {
         document.getElementById('stagePlaylistControls').innerHTML = `<div class="px-3 py-2 text-xs text-zinc-400">Loading official music…</div>`;
         document.getElementById('stageTrackTitle').innerText = `Loading ${concert.artist} previews…`;
         fetchArtistPreviewTracks(concert).then(tracks => {
           if (state.activeTab !== 'stage' || state.selectedConcert?.id !== concert.id) return;
-          beginStageSession(concert);
+          const session = beginStageSession(concert);
           renderStagePlaylist(concert);
-          if (tracks.length) playStageTrack(0);
+          if (tracks.length) {
+            const elapsedSeconds = Math.max(0, (Date.now() - session.startedAt) / 1000);
+            const timing = getStageTrackTiming(concert, elapsedSeconds);
+            playStageTrack(timing.index, timing.remainingMs);
+          }
         });
       }
     }
@@ -3492,7 +3533,10 @@
         endsAt,
         durationSeconds
       });
+      const session = getStageSession(concert.id);
+      scheduleStageExpiry(concert);
       startStageSessionTimer(concert);
+      return session;
     }
 
     function startStageSessionTimer(concert) {
@@ -3512,6 +3556,20 @@
       };
       tick();
       state.stageSessionTimer = setInterval(tick, 1000);
+    }
+
+    function scheduleStageExpiry(concert) {
+      if (state.stageExpiryTimer) clearTimeout(state.stageExpiryTimer);
+      const session = getStageSession(concert.id);
+      if (!session) return;
+      const remaining = session.endsAt - Date.now();
+      if (remaining <= 0) {
+        completeStageSession(concert.id, { showModal: state.activeTab === 'stage' && state.selectedConcert?.id === concert.id });
+        return;
+      }
+      state.stageExpiryTimer = setTimeout(() => {
+        completeStageSession(concert.id, { showModal: state.activeTab === 'stage' && state.selectedConcert?.id === concert.id });
+      }, remaining + 50);
     }
 
     function renderStagePlaylist(concert) {
@@ -3546,7 +3604,7 @@
       }
     }
 
-    function playStageTrack(idx = 0) {
+    function playStageTrack(idx = 0, remainingMs = null) {
       const track = getArtistPlaylist(state.selectedConcert)[idx];
       if (!track) return;
       if (state.stageTrackTimer) {
@@ -3559,22 +3617,55 @@
       document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1} of ${state.selectedConcert.previewTracks.length}`;
       updatePreviewPlaybackUI();
       playPreviewMusic(idx, { context: 'stage', advanceStage: true });
-      const trackDurationMs = getTrackDuration(state.selectedConcert.previewTracks[idx]) * 1000;
+      const trackDurationMs = remainingMs || getTrackDuration(state.selectedConcert.previewTracks[idx]) * 1000;
       state.stageTrackTimer = setTimeout(() => {
         if (idx < (state.selectedConcert?.previewTracks?.length || 0) - 1) playStageTrack(idx + 1);
         else finishStagePlaylist(true);
       }, trackDurationMs);
     }
 
+    function completeStageSession(concertId, options = {}) {
+      const concert = CONCERTS.find(item => item.id === concertId);
+      if (concert) concert.isEnded = true;
+      clearStageSession(concertId);
+      const hadTickets = state.userTickets.some(ticket => ticket.concertId === concertId);
+      if (hadTickets) {
+        state.userTickets = state.userTickets.filter(ticket => ticket.concertId !== concertId);
+        persistTickets();
+        updateTicketBadge();
+      }
+      if (state.selectedConcert?.id === concertId) {
+        stopPreviewMusic();
+        state.stageEnded = true;
+        document.getElementById('stageTrackTitle').innerText = 'Concert ended';
+        document.getElementById('camStatusLabel').innerText = 'Playlist complete';
+        updatePreviewPlaybackUI();
+        if (options.showModal) openConcertEndedModal(concert);
+      }
+      if (state.activeTab === 'tickets' && options.refreshTickets !== false) renderTicketsView();
+      if (state.activeTab === 'profile') renderProfilePage();
+    }
+
+    function openConcertEndedModal(concert) {
+      const modal = document.getElementById('concertEndedModal');
+      const message = document.getElementById('concertEndedMessage');
+      if (message) message.innerText = concert ? `${concert.artist}'s playlist has finished.` : 'The full playlist has finished.';
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function exitEndedStage() {
+      document.getElementById('concertEndedModal')?.classList.add('hidden');
+      navigateTo('tickets');
+    }
+
     function finishStagePlaylist(markExpired = false) {
       const concertId = state.selectedConcert?.id;
+      if (markExpired && concertId) {
+        completeStageSession(concertId, { showModal: state.activeTab === 'stage' });
+        return;
+      }
       stopPreviewMusic();
       state.stageEnded = true;
-      if (markExpired && state.selectedConcert) {
-        state.selectedConcert.isEnded = true;
-        if (concertId) clearStageSession(concertId);
-        pruneEndedTickets();
-      }
       document.getElementById('stageTrackTitle').innerText = 'Concert ended';
       document.getElementById('camStatusLabel').innerText = 'Playlist complete';
       showToast('Concert ended. The full preview playlist has finished.', 'info');
