@@ -608,8 +608,8 @@
 
           <div class="w-full mt-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3 space-y-2">
             <div class="flex items-center justify-between">
-              <label class="text-sm font-semibold text-zinc-500 uppercase tracking-wider block">Music Preview</label>
-              <span id="previewArtistLabel" class="text-sm text-zinc-500">Artist playlist</span>
+              <label class="text-sm font-semibold text-zinc-500 uppercase tracking-wider block">Official Preview</label>
+              <span id="previewArtistLabel" class="text-sm text-zinc-500"></span>
             </div>
             <div id="ticketPreviewTracks" class="space-y-2">
               <!-- Artist tracks rendered here -->
@@ -720,7 +720,7 @@
         <!-- Overlay Visualizer FX HUD -->
         <div class="relative z-10 p-4 sm:p-6 flex justify-between items-start pointer-events-none">
           <div class="bg-zinc-950/75 backdrop-blur-md border border-zinc-800 p-3 rounded-xl max-w-xs space-y-1">
-            <div class="text-[10px] text-emerald-400 font-mono tracking-wider">OFFICIAL ARTIST PREVIEW</div>
+            <div class="text-[10px] text-emerald-400 font-mono tracking-wider">OFFICIAL PREVIEW</div>
             <div id="stageTrackTitle" class="text-xs font-bold text-white truncate">Track 01 - Cybernetics (Live Mix)</div>
             <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mt-1">
               <div id="trackProgress" class="bg-emerald-400 h-full w-2/3 transition-all duration-300"></div>
@@ -1446,6 +1446,26 @@
       return CONCERTS.filter(concert => !concert.rotating && concert.previewAvailable !== false);
     }
 
+    function hydratePreviewCatalog() {
+      const previewableConcerts = CONCERTS.filter(concert => !concert.rotating);
+      let index = 0;
+      const loadNext = () => {
+        const concert = previewableConcerts[index++];
+        if (!concert) {
+          if (state.activeTab === 'discover') {
+            initFilters();
+            renderConcerts();
+          }
+          return;
+        }
+        fetchArtistPreviewTracks(concert).finally(() => {
+          if (state.activeTab === 'discover') renderConcerts();
+          setTimeout(loadNext, 120);
+        });
+      };
+      loadNext();
+    }
+
     /* ==========================================================================
        2. APP STATE MANAGEMENT
        ========================================================================== */
@@ -1592,6 +1612,9 @@
       holdProgress: 0,
       audioCtx: null,
       previewAudio: null,
+      previewTrackIndex: -1,
+      previewContext: '',
+      stageEnded: false,
       artistPreviewCache: new Map()
     };
     const TAX_RATE = 0.0875;
@@ -1615,13 +1638,13 @@
       initFilters();
       renderDailyWheel();
       renderConcerts();
+      hydratePreviewCatalog();
       updateTicketBadge();
       updateWalletUI();
       initStageVisualizer();
       updateAccountUI();
       document.addEventListener('click', handleFilterOutsideClick);
       document.addEventListener('click', handleMerchDropdownOutsideClick);
-      document.addEventListener('click', handlePreviewAudioOutsideClick, true);
       window.addEventListener('popstate', handleBrowserNavigation);
       document.addEventListener('keydown', handleNavigationShortcuts);
       if (state.account) startEngagementSystems();
@@ -1632,6 +1655,11 @@
       if (!state.account && !['account', 'about'].includes(tabName)) tabName = 'account';
       const previousTab = state.activeTab;
       if (previousTab !== tabName && ['ticket-select', 'stage'].includes(previousTab)) stopPreviewMusic();
+      if (previousTab === 'checkout' && tabName === 'ticket-select') {
+        stopReservationTimer();
+        cancelHoldToBuy();
+        state.pendingCheckout = null;
+      }
       state.activeTab = tabName;
       if (!options.skipHistory && (options.replaceHistory || previousTab !== tabName || !state.navReady)) {
         const method = options.replaceHistory || !state.navReady ? 'replaceState' : 'pushState';
@@ -2000,8 +2028,8 @@
         </button>
       `).join('');
       const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
-      const min = Math.min(...prices);
-      const max = Math.max(...prices);
+      const min = prices.length ? Math.min(...prices) : 0;
+      const max = prices.length ? Math.max(...prices) : 500;
       if (!state.filters.priceMin && !state.filters.priceMax) {
         state.filters.priceMin = min;
         state.filters.priceMax = max;
@@ -2305,10 +2333,10 @@
               artworkUrl: result.artworkUrl100 || result.artworkUrl60 || ''
             });
           });
-          concert.previewAvailable = uniqueTracks.length > 0;
-          concert.previewTracks = uniqueTracks;
+          concert.previewAvailable = uniqueTracks.length >= 3;
+          concert.previewTracks = uniqueTracks.slice(0, 3);
           if (!concert.previewAvailable && state.activeTab === 'discover') renderConcerts();
-          return uniqueTracks;
+          return concert.previewTracks;
         } catch (error) {
           console.warn('Official artist preview unavailable', error);
           return [];
@@ -2322,24 +2350,24 @@
     function renderTicketPreviewTracks() {
       if (!state.selectedConcert) return;
       const concert = state.selectedConcert;
-      document.getElementById('previewArtistLabel').innerText = `${concert.artist} • official previews`;
+      document.getElementById('previewArtistLabel').innerText = '';
       const container = document.getElementById('ticketPreviewTracks');
       container.innerHTML = `<div class="h-[42px] rounded-lg bg-zinc-100 animate-pulse flex items-center px-4 text-xs font-semibold text-zinc-500">Loading artist music…</div>`;
 
       fetchArtistPreviewTracks(concert).then(tracks => {
         if (state.selectedConcert?.id !== concert.id) return;
-        if (!tracks.length) {
-          container.innerHTML = `<div class="rounded-lg bg-zinc-100 border border-zinc-200 px-4 py-3 text-xs text-zinc-500">No official music preview is available for this artist.</div>`;
+        if (tracks.length < 3) {
+          container.innerHTML = `<div class="rounded-lg bg-zinc-100 border border-zinc-200 px-4 py-3 text-xs text-zinc-500">No full three-song official preview is available for this artist.</div>`;
           return;
         }
         container.innerHTML = `
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             ${tracks.map((track, idx) => `
-              <button onclick="previewTicketTrack(${idx})" class="min-w-0 flex items-center gap-2 bg-zinc-50 border border-zinc-200 hover:border-indigo-400 rounded-lg p-2 text-left">
+              <button onclick="previewTicketTrack(${idx})" data-preview-button data-preview-index="${idx}" class="min-w-0 flex items-center gap-2 bg-zinc-50 border border-zinc-200 hover:border-indigo-400 rounded-lg p-2 text-left">
                 <img src="${escapeHtml(track.artworkUrl)}" alt="" class="w-9 h-9 rounded-md object-cover bg-zinc-200 shrink-0">
                 <span class="min-w-0 flex-1">
                   <span class="block text-xs font-bold text-zinc-800 truncate">${escapeHtml(track.trackName)}</span>
-                  <span class="block text-[10px] text-zinc-500 truncate"><i class="fa-solid fa-play mr-1"></i>30-sec preview</span>
+                  <span class="block text-[10px] text-zinc-500 truncate"><i data-preview-icon="${idx}" class="fa-solid fa-play mr-1"></i>30-sec preview</span>
                 </span>
               </button>
             `).join('')}
@@ -2349,17 +2377,18 @@
             <span>•</span>
             <a href="${escapeHtml(tracks[0].trackViewUrl)}" target="_blank" rel="noopener noreferrer" class="font-bold text-zinc-600 hover:text-zinc-950"><i class="fa-brands fa-apple mr-0.5"></i>Apple Music</a>
           </div>`;
+        updatePreviewPlaybackUI();
       });
     }
 
     async function previewTicketTrack(idx) {
       const track = state.selectedConcert?.previewTracks?.[idx];
       if (!track) return;
-      const playing = await playPreviewMusic(idx);
+      const playing = await playPreviewMusic(idx, { context: 'ticket' });
       if (playing) showToast(`Previewing ${track.trackName} by ${track.artistName}`, 'info');
     }
 
-    async function playPreviewMusic(idx = 0) {
+    async function playPreviewMusic(idx = 0, options = {}) {
       const track = state.selectedConcert?.previewTracks?.[idx];
       if (!track?.previewUrl) {
         showToast('This artist does not have an official preview available.', 'info');
@@ -2373,17 +2402,34 @@
       audio.preload = 'none';
       audio.volume = 0.72;
       state.previewAudio = audio;
+      state.previewTrackIndex = idx;
+      state.previewContext = options.context || (state.activeTab === 'stage' ? 'stage' : 'ticket');
       try {
         await audio.play();
         isAudioPlaying = true;
+        updatePreviewPlaybackUI();
         const icon = document.getElementById('audioIcon');
         if (icon) icon.className = 'fa-solid fa-pause';
         audio.addEventListener('ended', () => {
-          if (state.previewAudio === audio) stopPreviewMusic();
+          if (state.previewAudio !== audio) return;
+          if (options.advanceStage && idx < (state.selectedConcert?.previewTracks?.length || 0) - 1) {
+            playStageTrack(idx + 1);
+          } else if (options.advanceStage) {
+            finishStagePlaylist();
+          } else {
+            stopPreviewMusic();
+          }
         }, { once: true });
         return true;
       } catch (error) {
         console.warn('Preview playback failed', error);
+        if (state.previewAudio === audio) {
+          state.previewAudio = null;
+          state.previewTrackIndex = -1;
+          state.previewContext = '';
+          isAudioPlaying = false;
+          updatePreviewPlaybackUI();
+        }
         showToast('The official preview could not be played.', 'info');
         return false;
       }
@@ -2395,15 +2441,26 @@
         try { state.previewAudio.currentTime = 0; } catch (error) {}
         state.previewAudio = null;
       }
+      state.previewTrackIndex = -1;
+      state.previewContext = '';
       isAudioPlaying = false;
+      updatePreviewPlaybackUI();
       const icon = document.getElementById('audioIcon');
       if (icon) icon.className = 'fa-solid fa-play';
     }
 
-    function handlePreviewAudioOutsideClick(event) {
-      if (!state.previewAudio || state.previewAudio.paused) return;
-      if (event.target.closest('#ticketPreviewTracks button, #stagePlaylistControls button, #stageAudioBtn')) return;
-      stopPreviewMusic();
+    function updatePreviewPlaybackUI() {
+      document.querySelectorAll('[data-preview-icon]').forEach(icon => {
+        const idx = Number(icon.dataset.previewIcon);
+        const active = state.previewContext === 'ticket' && state.previewTrackIndex === idx && state.previewAudio && !state.previewAudio.paused;
+        icon.className = `fa-solid ${active ? 'fa-circle-play' : 'fa-play'} mr-1`;
+      });
+      document.querySelectorAll('.playlist-row').forEach((row, idx) => {
+        const active = state.previewContext === 'stage' && state.stageTrackIndex === idx && state.previewAudio && !state.previewAudio.paused;
+        row.className = `playlist-row flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${active ? 'bg-emerald-500 text-black font-bold' : 'text-zinc-300 bg-zinc-900/70'}`;
+        const icon = row.querySelector('[data-stage-play-icon]');
+        if (icon) icon.className = `fa-solid ${active ? 'fa-circle-play' : 'fa-play'} text-[10px]`;
+      });
     }
 
     function getSectionColor(venue, secId) {
@@ -3110,18 +3167,19 @@
       document.getElementById('stageArtistName').innerText = concert.artist;
       document.getElementById('stageVenueName').innerText = `${venue.name} • ${venue.city}`;
       state.stageTrackIndex = 0;
+      state.stageEnded = false;
       navigateTo('stage');
 
       if (concert.previewTracks?.length) {
         renderStagePlaylist(concert);
-        setPlaylistTrack(0);
+        playStageTrack(0);
       } else {
         document.getElementById('stagePlaylistControls').innerHTML = `<div class="px-3 py-2 text-xs text-zinc-400">Loading official music…</div>`;
         document.getElementById('stageTrackTitle').innerText = `Loading ${concert.artist} previews…`;
         fetchArtistPreviewTracks(concert).then(tracks => {
           if (state.activeTab !== 'stage' || state.selectedConcert?.id !== concert.id) return;
           renderStagePlaylist(concert);
-          if (tracks.length) setPlaylistTrack(0, false);
+          if (tracks.length >= 3) playStageTrack(0);
         });
       }
     }
@@ -3133,25 +3191,49 @@
         return;
       }
       controls.innerHTML = getArtistPlaylist(concert).map((track, idx) => `
-        <button onclick="setPlaylistTrack(${idx})" class="playlist-btn px-3 py-2 rounded-lg text-xs text-left ${idx === 0 ? 'bg-emerald-500 text-black font-bold' : 'text-zinc-300 hover:bg-zinc-800'}">
-          ${idx + 1}. ${escapeHtml(track.replace(`${concert.artist} - `, ''))}
-        </button>
+        <div class="playlist-row flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${idx === state.stageTrackIndex ? 'bg-emerald-500 text-black font-bold' : 'text-zinc-300 bg-zinc-900/70'}">
+          <i data-stage-play-icon class="fa-solid ${idx === state.stageTrackIndex ? 'fa-circle-play' : 'fa-play'} text-[10px]"></i>
+          <span class="min-w-0 truncate">${idx + 1}. ${escapeHtml(track.replace(`${concert.artist} - `, ''))}</span>
+        </div>
       `).join('');
+      updatePreviewPlaybackUI();
     }
 
     function setPlaylistTrack(idx, shouldPlay = true) {
+      if (state.activeTab === 'stage') return;
       state.stageTrackIndex = idx;
       const track = getArtistPlaylist(state.selectedConcert)[idx];
       if (!track) return;
       document.getElementById('stageTrackTitle').innerText = track;
       document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1}`;
-      document.querySelectorAll('.playlist-btn').forEach((btn, btnIdx) => {
-        btn.className = `playlist-btn px-3 py-2 rounded-lg text-xs text-left ${btnIdx === idx ? 'bg-emerald-500 text-black font-bold' : 'text-zinc-300 hover:bg-zinc-800'}`;
-      });
       if (shouldPlay) {
-        playPreviewMusic(idx);
+        playPreviewMusic(idx, { context: 'stage' });
         showToast(`Playing ${track}`, 'info');
       }
+    }
+
+    function playStageTrack(idx = 0) {
+      const track = getArtistPlaylist(state.selectedConcert)[idx];
+      if (!track) return;
+      state.stageTrackIndex = idx;
+      state.stageEnded = false;
+      document.getElementById('stageTrackTitle').innerText = track;
+      document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1} of ${state.selectedConcert.previewTracks.length}`;
+      const progress = document.getElementById('trackProgress');
+      if (progress) progress.style.width = `${((idx + 1) / state.selectedConcert.previewTracks.length) * 100}%`;
+      updatePreviewPlaybackUI();
+      playPreviewMusic(idx, { context: 'stage', advanceStage: true });
+    }
+
+    function finishStagePlaylist() {
+      stopPreviewMusic();
+      state.stageEnded = true;
+      document.getElementById('stageTrackTitle').innerText = 'Concert ended';
+      document.getElementById('camStatusLabel').innerText = 'Playlist complete';
+      const progress = document.getElementById('trackProgress');
+      if (progress) progress.style.width = '100%';
+      showToast('Concert ended. The full preview playlist has finished.', 'info');
+      updatePreviewPlaybackUI();
     }
 
     /* ==========================================================================
@@ -3759,7 +3841,7 @@
     /* ==========================================================================
        8. LIVE STAGE AUDIO-VISUALIZER ENGINE
        ========================================================================== */
-    let isAudioPlaying = true;
+    let isAudioPlaying = false;
     let stageAnimationId = null;
 
     function resizeStageCanvas() {
@@ -3839,17 +3921,27 @@
     }
 
     function toggleStageAudio() {
-      isAudioPlaying = !isAudioPlaying;
       const icon = document.getElementById('audioIcon');
-      if (isAudioPlaying) {
-        icon.className = 'fa-solid fa-pause';
-        if (state.previewAudio?.src) state.previewAudio.play().catch(() => playPreviewMusic(state.stageTrackIndex));
-        else playPreviewMusic(state.stageTrackIndex);
-        showToast('Audio live stream resumed.', 'info');
-      } else {
+      if (!state.selectedConcert?.previewTracks?.length) return;
+      if (state.previewContext === 'stage' && state.previewAudio && !state.previewAudio.paused) {
+        state.previewAudio.pause();
+        isAudioPlaying = false;
         icon.className = 'fa-solid fa-play';
-        state.previewAudio?.pause();
+        updatePreviewPlaybackUI();
         showToast('Audio stream paused.', 'info');
+      } else {
+        icon.className = 'fa-solid fa-pause';
+        if (state.stageEnded) {
+          playStageTrack(0);
+        } else if (state.previewContext === 'stage' && state.previewAudio?.src) {
+          state.previewAudio.play().then(() => {
+            isAudioPlaying = true;
+            updatePreviewPlaybackUI();
+          }).catch(() => playStageTrack(state.stageTrackIndex));
+        } else {
+          playStageTrack(state.stageTrackIndex);
+        }
+        showToast('Audio live stream resumed.', 'info');
       }
     }
 
