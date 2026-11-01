@@ -1442,6 +1442,10 @@
       });
     });
 
+    function getPreviewCatalogConcerts() {
+      return CONCERTS.filter(concert => !concert.rotating && concert.previewAvailable !== false);
+    }
+
     /* ==========================================================================
        2. APP STATE MANAGEMENT
        ========================================================================== */
@@ -1617,6 +1621,7 @@
       updateAccountUI();
       document.addEventListener('click', handleFilterOutsideClick);
       document.addEventListener('click', handleMerchDropdownOutsideClick);
+      document.addEventListener('click', handlePreviewAudioOutsideClick, true);
       window.addEventListener('popstate', handleBrowserNavigation);
       document.addEventListener('keydown', handleNavigationShortcuts);
       if (state.account) startEngagementSystems();
@@ -1626,6 +1631,7 @@
     function navigateTo(tabName, options = {}) {
       if (!state.account && !['account', 'about'].includes(tabName)) tabName = 'account';
       const previousTab = state.activeTab;
+      if (previousTab !== tabName && ['ticket-select', 'stage'].includes(previousTab)) stopPreviewMusic();
       state.activeTab = tabName;
       if (!options.skipHistory && (options.replaceHistory || previousTab !== tabName || !state.navReady)) {
         const method = options.replaceHistory || !state.navReady ? 'replaceState' : 'pushState';
@@ -1993,7 +1999,7 @@
           <span>${option.label}</span>${state.filters.location === option.value ? '<i class="fa-solid fa-check text-indigo-700"></i>' : ''}
         </button>
       `).join('');
-      const prices = CONCERTS.map(concert => concert.priceFrom);
+      const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
       const min = Math.min(...prices);
       const max = Math.max(...prices);
       if (!state.filters.priceMin && !state.filters.priceMax) {
@@ -2083,7 +2089,7 @@
         return matchesLocation && matchesDate && matchesPrice && matchesSearch;
       };
 
-      const filtered = rotateConcertOrder(CONCERTS.filter(matchesConcertFilters));
+      const filtered = rotateConcertOrder(getPreviewCatalogConcerts().filter(matchesConcertFilters));
       const displayConcerts = [...filtered];
       const visibleConcerts = displayConcerts.slice(0, 150);
 
@@ -2178,7 +2184,7 @@
     }
 
     function clearFilters() {
-      const prices = CONCERTS.map(concert => concert.priceFrom);
+      const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
       state.filters = { location: 'ALL', date: 'ALL', dateStart: '', dateEnd: '', priceMin: Math.min(...prices), priceMax: Math.max(...prices) };
       document.getElementById('locationFilterButton').querySelector('span').innerText = 'Location';
       document.getElementById('dateStartFilter').value = '';
@@ -2299,7 +2305,9 @@
               artworkUrl: result.artworkUrl100 || result.artworkUrl60 || ''
             });
           });
+          concert.previewAvailable = uniqueTracks.length > 0;
           concert.previewTracks = uniqueTracks;
+          if (!concert.previewAvailable && state.activeTab === 'discover') renderConcerts();
           return uniqueTracks;
         } catch (error) {
           console.warn('Official artist preview unavailable', error);
@@ -2336,9 +2344,10 @@
               </button>
             `).join('')}
           </div>
-          <div class="flex items-center justify-between gap-3 pt-1 text-[10px] text-zinc-500">
-            <span>Preview provided courtesy of iTunes.</span>
-            <a href="${escapeHtml(tracks[0].trackViewUrl)}" target="_blank" rel="noopener noreferrer" class="shrink-0 rounded-md bg-zinc-950 text-white px-2.5 py-1.5 font-bold hover:bg-zinc-800"><i class="fa-brands fa-apple mr-1"></i>View on Apple Music</a>
+          <div class="flex items-center justify-end gap-1 pt-0.5 text-[9px] text-zinc-400">
+            <span>Courtesy of iTunes</span>
+            <span>•</span>
+            <a href="${escapeHtml(tracks[0].trackViewUrl)}" target="_blank" rel="noopener noreferrer" class="font-bold text-zinc-600 hover:text-zinc-950"><i class="fa-brands fa-apple mr-0.5"></i>Apple Music</a>
           </div>`;
       });
     }
@@ -2366,12 +2375,35 @@
       state.previewAudio = audio;
       try {
         await audio.play();
+        isAudioPlaying = true;
+        const icon = document.getElementById('audioIcon');
+        if (icon) icon.className = 'fa-solid fa-pause';
+        audio.addEventListener('ended', () => {
+          if (state.previewAudio === audio) stopPreviewMusic();
+        }, { once: true });
         return true;
       } catch (error) {
         console.warn('Preview playback failed', error);
         showToast('The official preview could not be played.', 'info');
         return false;
       }
+    }
+
+    function stopPreviewMusic() {
+      if (state.previewAudio) {
+        state.previewAudio.pause();
+        try { state.previewAudio.currentTime = 0; } catch (error) {}
+        state.previewAudio = null;
+      }
+      isAudioPlaying = false;
+      const icon = document.getElementById('audioIcon');
+      if (icon) icon.className = 'fa-solid fa-play';
+    }
+
+    function handlePreviewAudioOutsideClick(event) {
+      if (!state.previewAudio || state.previewAudio.paused) return;
+      if (event.target.closest('#ticketPreviewTracks button, #stagePlaylistControls button, #stageAudioBtn')) return;
+      stopPreviewMusic();
     }
 
     function getSectionColor(venue, secId) {
