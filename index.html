@@ -81,6 +81,22 @@
       width: 6px;
       height: 6px;
     }
+    #stageViewport:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: 0;
+    }
+    #stageViewport:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: 0;
+    }
+    .stage-swatch.is-active {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
 
     /* Standard sleek hover without infinite pulsing */
     .concert-card {
@@ -493,8 +509,8 @@
           <div class="relative">
             <div id="dateFilterButton" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus-within:border-indigo-500 flex items-center">
               <span class="grid grid-cols-2 gap-1 w-full">
-                <button type="button" onclick="openDatePicker('start')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
-                <button type="button" onclick="openDatePicker('end')" class="min-w-0 inline-flex items-center justify-center gap-0.5 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button id="dateStartButton" type="button" onclick="openDatePicker('start')" class="min-w-0 inline-flex items-center justify-center gap-0.5 rounded-lg px-1.5 py-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateStartLabel">From</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
+                <button id="dateEndButton" type="button" onclick="openDatePicker('end')" class="min-w-0 inline-flex items-center justify-center gap-0.5 rounded-lg px-1.5 py-1 text-[11px] font-bold text-indigo-950 hover:text-indigo-600"><span id="dateEndLabel">To</span><i class="fa-regular fa-calendar text-[10px]"></i></button>
               </span>
             </div>
             <div id="dateFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 w-72 bg-white border border-indigo-200 rounded-xl p-2"></div>
@@ -721,14 +737,20 @@
       </div>
 
       <!-- Stage Screen Visualizer Viewport -->
-      <div class="relative w-full h-[450px] sm:h-[520px] bg-black rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col justify-between">
+      <div id="stageViewport" class="relative w-full h-[450px] sm:h-[520px] bg-black rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col justify-between">
         
         <!-- Interactive Visualizer Canvas -->
         <canvas id="stageCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
 
-        <button onclick="openMerchQueueForCurrentStage()" class="absolute right-4 top-4 sm:right-6 sm:top-6 z-20 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-          <i class="fa-solid fa-bag-shopping"></i> Buy Merch
-        </button>
+        <div class="absolute right-4 top-4 sm:right-6 sm:top-6 z-20 flex flex-wrap justify-end gap-2">
+          <div id="stageWaveControls" class="flex items-center gap-1 rounded-xl border border-white/10 bg-zinc-950/75 p-1 backdrop-blur-md"></div>
+          <button onclick="toggleStageFullscreen()" class="h-9 w-9 rounded-xl bg-zinc-950/75 border border-white/10 text-white hover:bg-white hover:text-zinc-950 transition-all backdrop-blur-md" title="Fullscreen stage" aria-label="Fullscreen stage">
+            <i id="stageFullscreenIcon" class="fa-solid fa-expand"></i>
+          </button>
+          <button onclick="openMerchQueueForCurrentStage()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+            <i class="fa-solid fa-bag-shopping"></i> Buy Merch
+          </button>
+        </div>
 
         <!-- Artist Playlist Controls -->
         <div class="relative z-10 p-4 sm:p-6 flex justify-start items-start pointer-events-none h-full">
@@ -1664,6 +1686,7 @@
       audioCtx: null,
       previewAudio: null,
       stageAudioLooping: false,
+      stageWaveTheme: localStorage.getItem('dopamineStageWaveTheme') || 'auto',
       previewTrackIndex: -1,
       previewContext: '',
       stageEnded: false,
@@ -2158,6 +2181,7 @@
     function handleDateFilter(which, value) {
       if (which === 'start') state.filters.dateStart = value || '';
       if (which === 'end') state.filters.dateEnd = value || '';
+      normalizeDateRange();
       updateDateFilterLabels();
       renderDateCalendar();
       renderConcerts();
@@ -2168,6 +2192,7 @@
       const selected = field === 'start' ? state.filters.dateStart : state.filters.dateEnd;
       state.datePickerMonth = selected || state.datePickerMonth || getFirstConcertDateKey() || todayIsoDate();
       ['locationFilterMenu', 'sortFilterMenu'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+      updateDateFilterLabels();
       renderDateCalendar();
       document.getElementById('dateFilterMenu')?.classList.remove('hidden');
     }
@@ -2205,9 +2230,18 @@
       if (state.datePickerField === 'start') {
         state.datePickerField = 'end';
         state.datePickerMonth = state.filters.dateEnd || value;
+        updateDateFilterLabels();
         renderDateCalendar();
       } else {
         document.getElementById('dateFilterMenu')?.classList.add('hidden');
+      }
+    }
+
+    function normalizeDateRange() {
+      const { dateStart, dateEnd } = state.filters;
+      if (dateStart && dateEnd && dateStart > dateEnd) {
+        state.filters.dateStart = dateEnd;
+        state.filters.dateEnd = dateStart;
       }
     }
 
@@ -2231,34 +2265,41 @@
         const selected = key === selectedValue;
         const inRange = rangeStart && rangeEnd && key >= rangeStart && key <= rangeEnd;
         return `
-          <button type="button" onclick="selectCalendarDate('${key}')" class="h-8 rounded-lg text-xs font-black transition-colors ${selected ? 'bg-indigo-700 text-white' : inRange ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-950 hover:bg-indigo-50'}">
+          <button type="button" onclick="event.stopPropagation(); selectCalendarDate('${key}')" class="h-8 rounded-lg text-xs font-black transition-colors ${selected ? 'bg-indigo-700 text-white' : inRange ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-950 hover:bg-indigo-50'}">
             ${day}
           </button>`;
       }).join('');
       menu.innerHTML = `
         <div class="flex items-center justify-between px-1 pb-2">
-          <button type="button" onclick="shiftDatePickerMonth(-1)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+          <button type="button" onclick="event.stopPropagation(); shiftDatePickerMonth(-1)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
           <div class="text-xs font-black text-indigo-950">${monthLabel}</div>
-          <button type="button" onclick="shiftDatePickerMonth(1)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+          <button type="button" onclick="event.stopPropagation(); shiftDatePickerMonth(1)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
         </div>
         <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-black uppercase tracking-wider text-indigo-400 mb-1">
           ${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => `<span>${day}</span>`).join('')}
         </div>
         <div class="grid grid-cols-7 gap-1">${blanks}${days}</div>
-        <div class="mt-2 border-t border-indigo-100 pt-2 text-[10px] font-bold text-indigo-500">
-          Choosing ${state.datePickerField === 'start' ? 'from' : 'to'}
+        <div class="mt-2 border-t border-indigo-100 pt-2 text-[10px] font-bold text-indigo-500 space-y-1">
+          <div class="flex items-center justify-between gap-2">
+            <span class="${state.datePickerField === 'start' ? 'text-indigo-700' : ''}">From ${formatShortDate(state.filters.dateStart) || 'any'}</span>
+            <span class="${state.datePickerField === 'end' ? 'text-indigo-700' : ''}">To ${formatShortDate(state.filters.dateEnd) || 'any'}</span>
+          </div>
+          <div>Choosing ${state.datePickerField === 'start' ? 'from' : 'to'} date</div>
         </div>`;
     }
 
+    function formatShortDate(value) {
+      if (!value) return '';
+      return new Date(`${value}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
     function updateDateFilterLabels() {
-      const format = (value, fallback) => {
-        if (!value) return fallback;
-        return new Date(`${value}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      };
       const start = document.getElementById('dateStartLabel');
       const end = document.getElementById('dateEndLabel');
-      if (start) start.innerText = format(state.filters.dateStart, 'From');
-      if (end) end.innerText = format(state.filters.dateEnd, 'To');
+      if (start) start.innerText = state.filters.dateStart ? `From ${formatShortDate(state.filters.dateStart)}` : 'From';
+      if (end) end.innerText = state.filters.dateEnd ? `To ${formatShortDate(state.filters.dateEnd)}` : 'To';
+      document.getElementById('dateStartButton')?.classList.toggle('bg-white', state.datePickerField === 'start');
+      document.getElementById('dateEndButton')?.classList.toggle('bg-white', state.datePickerField === 'end');
     }
 
     function matchesDateRange(dateKey) {
@@ -3538,6 +3579,7 @@
       state.stageTrackIndex = 0;
       state.stageEnded = false;
       navigateTo('stage');
+      renderStageWaveControls();
 
       if (concert.previewTracks?.length) {
         const session = beginStageSession(concert);
@@ -3655,6 +3697,7 @@
       }
       state.stageTrackIndex = idx;
       state.stageEnded = false;
+      renderStageWaveControls();
       document.getElementById('stageTrackTitle').innerText = track;
       document.getElementById('camStatusLabel').innerText = `Playlist: Track ${idx + 1} of ${state.selectedConcert.previewTracks.length}`;
       updatePreviewPlaybackUI();
@@ -4322,6 +4365,21 @@
        ========================================================================== */
     let isAudioPlaying = false;
     let stageAnimationId = null;
+    const STAGE_WAVE_THEMES = [
+      { id: 'auto', label: 'Auto', colors: ['#f4f4f5', '#a5b4fc', '#34d399'] },
+      { id: 'mint', label: 'Mint', colors: ['#ecfeff', '#5eead4', '#10b981'] },
+      { id: 'violet', label: 'Violet', colors: ['#faf5ff', '#c084fc', '#4f46e5'] },
+      { id: 'sunset', label: 'Sunset', colors: ['#fff7ed', '#fb7185', '#f97316'] },
+      { id: 'blue', label: 'Blue', colors: ['#eff6ff', '#38bdf8', '#2563eb'] }
+    ];
+    const STAGE_AUTO_PALETTES = [
+      ['#f4f4f5', '#a5b4fc', '#34d399'],
+      ['#fef3c7', '#fb7185', '#f97316'],
+      ['#dbeafe', '#38bdf8', '#22d3ee'],
+      ['#f5d0fe', '#c084fc', '#6366f1'],
+      ['#dcfce7', '#86efac', '#14b8a6'],
+      ['#fee2e2', '#f472b6', '#ef4444']
+    ];
 
     function resizeStageCanvas() {
       const canvas = document.getElementById('stageCanvas');
@@ -4333,6 +4391,59 @@
       if (canvas.height !== height) canvas.height = height;
     }
 
+    function getStageWavePalette() {
+      const selected = STAGE_WAVE_THEMES.find(theme => theme.id === state.stageWaveTheme);
+      if (selected && selected.id !== 'auto') return selected.colors;
+      return STAGE_AUTO_PALETTES[state.stageTrackIndex % STAGE_AUTO_PALETTES.length];
+    }
+
+    function renderStageWaveControls() {
+      const controls = document.getElementById('stageWaveControls');
+      if (!controls) return;
+      controls.innerHTML = STAGE_WAVE_THEMES.map(theme => {
+        const colors = theme.id === 'auto' ? STAGE_AUTO_PALETTES[state.stageTrackIndex % STAGE_AUTO_PALETTES.length] : theme.colors;
+        const gradient = `linear-gradient(135deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
+        return `
+          <button type="button" onclick="setStageWaveTheme('${theme.id}')" class="stage-swatch ${state.stageWaveTheme === theme.id ? 'is-active' : ''} h-7 w-7 rounded-lg border border-white/15" style="background:${gradient}" title="${theme.label}" aria-label="${theme.label} waves"></button>
+        `;
+      }).join('');
+    }
+
+    function setStageWaveTheme(themeId) {
+      state.stageWaveTheme = STAGE_WAVE_THEMES.some(theme => theme.id === themeId) ? themeId : 'auto';
+      localStorage.setItem('dopamineStageWaveTheme', state.stageWaveTheme);
+      renderStageWaveControls();
+    }
+
+    function isStageFullscreen() {
+      return document.fullscreenElement === document.getElementById('stageViewport') || document.webkitFullscreenElement === document.getElementById('stageViewport');
+    }
+
+    async function toggleStageFullscreen() {
+      const viewport = document.getElementById('stageViewport');
+      if (!viewport) return;
+      try {
+        if (isStageFullscreen()) {
+          if (document.exitFullscreen) await document.exitFullscreen();
+          else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+        } else if (viewport.requestFullscreen) {
+          await viewport.requestFullscreen();
+        } else if (viewport.webkitRequestFullscreen) {
+          await viewport.webkitRequestFullscreen();
+        }
+      } catch (error) {
+        showToast('Fullscreen is not available here.', 'info');
+      }
+      updateStageFullscreenIcon();
+      setTimeout(resizeStageCanvas, 80);
+    }
+
+    function updateStageFullscreenIcon() {
+      const icon = document.getElementById('stageFullscreenIcon');
+      if (!icon) return;
+      icon.className = isStageFullscreen() ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+    }
+
     function initStageVisualizer() {
       const canvas = document.getElementById('stageCanvas');
       if (!canvas) return;
@@ -4340,6 +4451,15 @@
 
       resizeStageCanvas();
       window.addEventListener('resize', resizeStageCanvas);
+      document.addEventListener('fullscreenchange', () => {
+        updateStageFullscreenIcon();
+        setTimeout(resizeStageCanvas, 80);
+      });
+      document.addEventListener('webkitfullscreenchange', () => {
+        updateStageFullscreenIcon();
+        setTimeout(resizeStageCanvas, 80);
+      });
+      renderStageWaveControls();
 
       let step = 0;
 
@@ -4355,15 +4475,7 @@
         const height = canvas.height;
         const bars = 58;
         const barWidth = width / bars;
-        const palettes = [
-          ['#f4f4f5', '#a5b4fc', '#34d399'],
-          ['#fef3c7', '#fb7185', '#f97316'],
-          ['#dbeafe', '#38bdf8', '#22d3ee'],
-          ['#f5d0fe', '#c084fc', '#6366f1'],
-          ['#dcfce7', '#86efac', '#14b8a6'],
-          ['#fee2e2', '#f472b6', '#ef4444']
-        ];
-        const palette = palettes[state.stageTrackIndex % palettes.length];
+        const palette = getStageWavePalette();
 
         for (let i = 0; i < bars; i++) {
           const intensity = 0.55;
