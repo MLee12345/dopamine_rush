@@ -107,25 +107,50 @@
     }
     #stageViewport:fullscreen #stagePlaylistControls,
     #stageViewport:-webkit-full-screen #stagePlaylistControls {
-      height: 100%;
+      flex: 1;
       max-height: none;
       max-width: 380px;
       border-radius: 0.875rem;
     }
+    #stageViewport:fullscreen .playlist-row,
+    #stageViewport:-webkit-full-screen .playlist-row {
+      font-size: 1rem;
+      padding: 0.85rem 1rem;
+      gap: 0.75rem;
+    }
     #stageViewport:fullscreen #stageNowPlayingPanel,
     #stageViewport:-webkit-full-screen #stageNowPlayingPanel {
-      align-self: flex-end;
-      margin-bottom: 22px;
+      align-self: stretch;
     }
     .stage-spectrum-slider {
       width: 8.5rem;
-      accent-color: #10b981;
       cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
     }
     .stage-spectrum-slider::-webkit-slider-runnable-track {
       height: 0.5rem;
       border-radius: 999px;
       background: linear-gradient(90deg, #ef4444, #f59e0b, #facc15, #22c55e, #06b6d4, #4f46e5, #c084fc, #ef4444);
+    }
+    .stage-spectrum-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 1rem;
+      height: 1rem;
+      margin-top: -0.25rem;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 2px solid #09090b;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.75);
+    }
+    .stage-spectrum-slider::-moz-range-thumb {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 2px solid #09090b;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.75);
     }
     .stage-spectrum-slider::-moz-range-track {
       height: 0.5rem;
@@ -534,7 +559,7 @@
 
       <!-- Marketplace Filters -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-zinc-200 pb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.18fr_1.28fr_max-content_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.05fr_1.06fr_1.28fr_10.75rem_0.55fr] gap-2 w-full lg:max-w-6xl items-stretch">
           <div class="relative">
             <button id="locationFilterButton" onclick="toggleFilterMenu('location')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between">
               <span>Location</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
@@ -560,7 +585,7 @@
             </div>
           </div>
           <div class="relative">
-            <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-max min-w-[8.5rem] bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between gap-3">
+            <button id="sortFilterButton" onclick="toggleFilterMenu('sort')" class="h-full min-h-[58px] w-full bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2.5 text-xs font-bold text-indigo-950 hover:border-indigo-400 focus:outline-none focus:border-indigo-500 flex items-center justify-between gap-3">
               <span class="whitespace-nowrap">Sort by</span><i class="fa-solid fa-arrow-down-wide-short text-[10px] shrink-0"></i>
             </button>
             <div id="sortFilterMenu" class="filter-menu hidden absolute left-0 top-[calc(100%+6px)] z-30 min-w-full w-max bg-white border border-indigo-200 rounded-xl p-1"></div>
@@ -788,11 +813,11 @@
         </div>
 
         <!-- Artist Playlist Controls -->
-        <div id="stageLeftDeck" class="absolute z-10 left-4 top-4 bottom-4 sm:left-6 sm:top-6 sm:bottom-6 flex items-start gap-3 pointer-events-none">
-          <div id="stagePlaylistControls" class="pointer-events-auto flex max-h-full w-full max-w-xs flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
+        <div id="stageLeftDeck" class="absolute z-10 left-4 top-4 bottom-4 sm:left-6 sm:top-6 sm:bottom-6 flex w-full max-w-xs flex-col items-stretch gap-3 pointer-events-none">
+          <div id="stagePlaylistControls" class="pointer-events-auto flex min-h-0 flex-1 w-full flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
             <!-- Dynamic playlist buttons -->
           </div>
-          <div id="stageNowPlayingPanel" class="pointer-events-auto flex items-center gap-3 rounded-xl bg-zinc-950/80 border border-zinc-800 p-3 pr-4 backdrop-blur-md max-w-sm">
+          <div id="stageNowPlayingPanel" class="pointer-events-auto flex items-center gap-3 rounded-xl bg-zinc-950/80 border border-zinc-800 p-3 pr-4 backdrop-blur-md">
             <button id="stageAudioBtn" onclick="toggleStageAudio()" class="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all shrink-0">
               <i class="fa-solid fa-pause" id="audioIcon"></i>
             </button>
