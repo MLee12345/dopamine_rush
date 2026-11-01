@@ -100,7 +100,10 @@
       stroke-linejoin: round;
       transform-box: fill-box;
       transform-origin: center;
-      transform: scale(1.06, 1.18);
+      transform: scale(1.08, 1.35);
+    }
+    .venue-map-curved .seat-section {
+      transform: scale(1.08, 1.6);
     }
     .seat-section:hover {
       filter: brightness(0.96);
@@ -113,7 +116,7 @@
     }
     .section-label {
       fill: #312e81;
-      font-size: 7.2px;
+      font-size: 8.4px;
       font-weight: 800;
       pointer-events: none;
       dominant-baseline: middle;
@@ -2387,7 +2390,8 @@
           ${straightSectionLabel(back, 150, 43)}
         `
       };
-      const svgHtml = `<svg viewBox="0 0 300 200" class="w-full h-full max-w-[620px]">${layouts[venue.id] || layouts.sphere}</svg>`;
+      const curvedMapClass = ['msg', 'o2', 'hollywoodbowl'].includes(venue.id) ? 'venue-map-curved' : '';
+      const svgHtml = `<svg viewBox="0 0 300 200" class="w-full h-full max-w-[620px] ${curvedMapClass}">${layouts[venue.id] || layouts.sphere}</svg>`;
 
       svgContainer.innerHTML = svgHtml;
       renderSectionLegend(venue);
