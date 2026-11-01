@@ -141,7 +141,7 @@
       margin-top: -0.25rem;
       border-radius: 999px;
       background: #ffffff;
-      border: 2px solid #09090b;
+      border: 0;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.75);
     }
     .stage-spectrum-slider::-moz-range-thumb {
@@ -149,7 +149,7 @@
       height: 1rem;
       border-radius: 999px;
       background: #ffffff;
-      border: 2px solid #09090b;
+      border: 0;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.75);
     }
     .stage-spectrum-slider::-moz-range-track {
@@ -814,9 +814,6 @@
 
         <!-- Artist Playlist Controls -->
         <div id="stageLeftDeck" class="absolute z-10 left-4 top-4 bottom-4 sm:left-6 sm:top-6 sm:bottom-6 flex w-full max-w-xs flex-col items-stretch gap-3 pointer-events-none">
-          <div id="stagePlaylistControls" class="pointer-events-auto flex min-h-0 flex-1 w-full flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
-            <!-- Dynamic playlist buttons -->
-          </div>
           <div id="stageNowPlayingPanel" class="pointer-events-auto flex items-center gap-3 rounded-xl bg-zinc-950/80 border border-zinc-800 p-3 pr-4 backdrop-blur-md">
             <button id="stageAudioBtn" onclick="toggleStageAudio()" class="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all shrink-0">
               <i class="fa-solid fa-pause" id="audioIcon"></i>
@@ -828,6 +825,9 @@
                 <i class="fa-solid fa-users text-emerald-400"></i> <span id="stageViewerCount">14,289</span> tuning in
               </div>
             </div>
+          </div>
+          <div id="stagePlaylistControls" class="pointer-events-auto flex min-h-0 flex-1 w-full flex-col gap-1.5 overflow-y-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-2 rounded-xl">
+            <!-- Dynamic playlist buttons -->
           </div>
         </div>
       </div>
@@ -1369,16 +1369,16 @@
     ];
 
     const WHEEL_DEAL_LIBRARY = [
-      { label: '5% off', fullLabel: '5% off checkout', discount: 5, flat: 0, wallet: 0 },
-      { label: '15% off', fullLabel: '15% off checkout', discount: 15, flat: 0, wallet: 0 },
-      { label: '$20 off', fullLabel: '$20 off checkout', discount: 0, flat: 20, wallet: 0 },
+      { label: '5% off', fullLabel: '5% off ticket subtotal', discount: 5, flat: 0, wallet: 0 },
+      { label: '15% off', fullLabel: '15% off ticket subtotal', discount: 15, flat: 0, wallet: 0 },
+      { label: '$20 off', fullLabel: '$20 checkout credit before tax', discount: 0, flat: 20, wallet: 0 },
       { label: 'Free merch', fullLabel: 'Free merch credit', discount: 0, flat: 0, wallet: 45 },
-      { label: '$35 off', fullLabel: '$35 off checkout', discount: 0, flat: 35, wallet: 0 },
-      { label: 'Free ticket', fullLabel: 'Free ticket deal', discount: 100, flat: 0, wallet: 0 },
-      { label: 'Free fees', fullLabel: 'Free-fee checkout', discount: 12, flat: 0, wallet: 0 },
-      { label: '25% off', fullLabel: '25% off one order', discount: 25, flat: 0, wallet: 0 },
+      { label: '$35 off', fullLabel: '$35 checkout credit before tax', discount: 0, flat: 35, wallet: 0 },
+      { label: 'Free ticket', fullLabel: 'One ticket free at checkout', discount: 100, flat: 0, wallet: 0 },
+      { label: 'Free fees', fullLabel: 'Free service and venue fees', discount: 12, flat: 0, wallet: 0 },
+      { label: '25% off', fullLabel: '25% off ticket subtotal', discount: 25, flat: 0, wallet: 0 },
       { label: '$10 wallet', fullLabel: '$10 wallet bonus', discount: 0, flat: 0, wallet: 10 },
-      { label: 'VIP save', fullLabel: 'VIP section discount', discount: 18, flat: 0, wallet: 0 },
+      { label: 'VIP save', fullLabel: '18% off ticket subtotal', discount: 18, flat: 0, wallet: 0 },
       { label: '$50 merch', fullLabel: '$50 merch credit', discount: 0, flat: 0, wallet: 50 },
       { label: 'Half fees', fullLabel: 'Half-off service fees', discount: 6, flat: 0, wallet: 0 }
     ];
@@ -1525,6 +1525,12 @@
       return `$${Math.round(Number(value || 0)).toLocaleString()}`;
     }
 
+    function getConcertBasePrice(concert) {
+      const sections = VENUES[concert?.venueId]?.sections || [];
+      if (!sections.length) return Number(concert?.priceFrom || 0);
+      return Math.min(...sections.map(section => Number(section.price || 0)));
+    }
+
     function centsForKey(key) {
       let hash = 0;
       String(key).split('').forEach(char => {
@@ -1540,11 +1546,11 @@
     function applyCentsToCatalog() {
       Object.values(VENUES).forEach(venue => {
         venue.sections.forEach(section => {
-          section.price = addDeterministicCents(section.price, `${venue.id}-${section.id}`);
+          section.price = Math.round(section.price);
         });
       });
       CONCERTS.forEach(concert => {
-        concert.priceFrom = addDeterministicCents(concert.priceFrom, `${concert.id}-from`);
+        concert.priceFrom = getConcertBasePrice(concert);
         concert.merch.forEach(item => {
           item.price = addDeterministicCents(item.price, `${concert.id}-${item.id}`);
         });
@@ -2182,7 +2188,7 @@
           </button>
         `).join('');
       }
-      const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
+      const prices = getPreviewCatalogConcerts().map(getConcertBasePrice);
       const min = prices.length ? Math.min(...prices) : 0;
       const max = prices.length ? Math.max(...prices) : 500;
       if (!state.filters.priceMin && !state.filters.priceMax) {
@@ -2379,10 +2385,10 @@
         return sorted.sort((a, b) => a.dateKey.localeCompare(b.dateKey) || tieBreak(a, b));
       }
       if (state.sortBy === 'price-asc') {
-        return sorted.sort((a, b) => a.priceFrom - b.priceFrom || tieBreak(a, b));
+        return sorted.sort((a, b) => getConcertBasePrice(a) - getConcertBasePrice(b) || tieBreak(a, b));
       }
       if (state.sortBy === 'price-desc') {
-        return sorted.sort((a, b) => b.priceFrom - a.priceFrom || tieBreak(a, b));
+        return sorted.sort((a, b) => getConcertBasePrice(b) - getConcertBasePrice(a) || tieBreak(a, b));
       }
       if (state.sortBy === 'artist-asc') {
         return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || a.dateKey.localeCompare(b.dateKey) || tieBreak(a, b));
@@ -2398,7 +2404,8 @@
         const venue = VENUES[c.venueId];
         const matchesLocation = state.filters.location === 'ALL' || venue.city === state.filters.location;
         const matchesDate = matchesDateRange(c.dateKey);
-        const matchesPrice = c.priceFrom >= state.filters.priceMin && c.priceFrom <= state.filters.priceMax;
+        const basePrice = getConcertBasePrice(c);
+        const matchesPrice = basePrice >= state.filters.priceMin && basePrice <= state.filters.priceMax;
         const matchesSearch = c.artist.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
                               c.tour.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
                               venue.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
@@ -2451,7 +2458,7 @@
           <div class="p-5 pt-0 flex items-center justify-between gap-3">
             <div>
               <span class="text-[10px] text-zinc-500 block uppercase">From</span>
-              <span class="text-lg font-extrabold text-zinc-950">${formatWholeMoney(concert.priceFrom)}</span>
+              <span class="text-lg font-extrabold text-zinc-950">${formatWholeMoney(getConcertBasePrice(concert))}</span>
             </div>
             <button onclick="openTicketModal('${concert.id}')" class="px-5 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-xs rounded-md transition-all shadow-md">
               See Tickets
@@ -2499,7 +2506,7 @@
     }
 
     function clearFilters() {
-      const prices = getPreviewCatalogConcerts().map(concert => concert.priceFrom);
+      const prices = getPreviewCatalogConcerts().map(getConcertBasePrice);
       state.filters = { location: 'ALL', date: 'ALL', dateStart: '', dateEnd: '', priceMin: Math.min(...prices), priceMax: Math.max(...prices) };
       document.getElementById('locationFilterButton').querySelector('span').innerText = 'Location';
       document.getElementById('dateFilterMenu')?.classList.add('hidden');
@@ -3057,7 +3064,7 @@
             <div class="text-xs text-zinc-500 mt-0.5">${isSoldOut ? 'Sold out' : `${sec.seatsAvailable} passes available`}</div>
           </div>
           <div class="text-right">
-            <div class="text-lg font-extrabold text-indigo-700">${formatMoney(sec.price)}</div>
+            <div class="text-lg font-extrabold text-indigo-700">${formatWholeMoney(sec.price)}</div>
             <div class="text-[11px] text-zinc-500">per pass</div>
           </div>
         `;
@@ -3185,7 +3192,7 @@
 
       const concert = state.selectedConcert;
       const venue = VENUES[concert.venueId];
-      const { fees, tax, discount, finalTotal } = calculateTicketPayment();
+      const { fees, tax, discount, finalTotal, dealLabel, dealDetail } = calculateTicketPayment();
       const shortfall = Math.max(0, finalTotal - state.walletBalance);
 
       container.innerHTML = `
@@ -3221,10 +3228,15 @@
             <span class="text-zinc-600">Tax (${formatTaxRate()})</span>
             <span class="text-zinc-800">${formatMoney(tax)}</span>
           </div>
-          <div class="flex items-center justify-between">
-            <span class="text-zinc-600">Daily wheel deal (${formatAppliedDealLabel(discount)})</span>
-            <span class="text-teal-700">-${formatMoney(discount)}</span>
-          </div>
+          ${dealLabel && discount > 0 ? `
+            <div class="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-teal-800 font-bold">Daily wheel deal: ${dealLabel}</span>
+                <span class="text-teal-700 font-extrabold">-${formatMoney(discount)}</span>
+              </div>
+              <div class="mt-0.5 text-[11px] font-semibold text-teal-700">${dealDetail}</div>
+            </div>
+          ` : ''}
           <div class="flex items-center justify-between pt-3 border-t border-zinc-200">
             <span class="text-zinc-950 font-bold">Total charge</span>
             <span class="text-2xl font-extrabold text-indigo-700">${formatMoney(finalTotal)}</span>
@@ -3236,22 +3248,69 @@
     function calculateTicketPayment() {
       const subtotal = state.pendingCheckout ? state.pendingCheckout.totalPaid : 0;
       const fees = roundMoney(subtotal * 0.12);
-      const pctDiscount = roundMoney(subtotal * (state.discountPct / 100));
-      const discount = roundMoney(Math.min(subtotal + fees, Math.max(pctDiscount, state.discountFlat)));
+      const wheelDeal = calculateWheelCheckoutDeal(subtotal, fees);
+      const discount = wheelDeal.discount;
       const taxableTotal = Math.max(0, subtotal + fees - discount);
       const tax = roundMoney(taxableTotal * TAX_RATE);
       const finalTotal = roundMoney(Math.max(0, taxableTotal + tax));
-      return { fees, tax, discount, finalTotal, walletUsed: finalTotal, cardTotal: finalTotal };
+      return { fees, tax, discount, finalTotal, walletUsed: finalTotal, cardTotal: finalTotal, dealLabel: wheelDeal.label, dealDetail: wheelDeal.detail };
     }
 
     function formatTaxRate() {
       return `${(TAX_RATE * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
     }
 
-    function formatAppliedDealLabel(discount) {
-      if (state.discountPct > 0) return `${state.discountPct}% off`;
-      if (state.discountFlat > 0) return `${formatMoney(Math.min(state.discountFlat, discount))} off`;
-      return 'none';
+    function calculateWheelCheckoutDeal(subtotal, fees) {
+      const label = state.activeDealLabel || '';
+      const normalizedLabel = label.toLowerCase();
+      if (state.discountPct > 0) {
+        if (normalizedLabel.includes('free-fee') || normalizedLabel.includes('free service')) {
+          return {
+            label: 'Free service and venue fees',
+            discount: roundMoney(fees),
+            detail: `${formatMoney(fees)} service and venue fees removed from this order.`
+          };
+        }
+        if (normalizedLabel.includes('half-off service')) {
+          const discount = roundMoney(fees * 0.5);
+          return {
+            label: 'Half off service and venue fees',
+            discount,
+            detail: `50% x ${formatMoney(fees)} service and venue fees = ${formatMoney(discount)} off.`
+          };
+        }
+        if (normalizedLabel.includes('free ticket')) {
+          const ticketPrice = state.pendingCheckout ? Number(state.pendingCheckout.priceEach || 0) : subtotal;
+          const discount = roundMoney(Math.min(subtotal, ticketPrice));
+          return {
+            label: 'One ticket free',
+            discount,
+            detail: `1 ticket x ${formatMoney(ticketPrice)} removed from ${formatMoney(subtotal)} ticket subtotal.`
+          };
+        }
+        const discount = roundMoney(subtotal * (state.discountPct / 100));
+        return {
+          label: `${state.discountPct}% off tickets`,
+          discount,
+          detail: `${state.discountPct}% x ${formatMoney(subtotal)} ticket subtotal = ${formatMoney(discount)} off.`
+        };
+      }
+      if (state.discountFlat > 0) {
+        const discount = roundMoney(Math.min(subtotal + fees, state.discountFlat));
+        return {
+          label: `${formatMoney(state.discountFlat)} checkout credit`,
+          discount,
+          detail: `${formatMoney(discount)} applied against tickets plus fees before tax.`
+        };
+      }
+      if (label) {
+        return {
+          label,
+          discount: 0,
+          detail: 'This prize was added to your wallet already, so checkout uses your updated wallet balance.'
+        };
+      }
+      return { label: '', discount: 0, detail: '' };
     }
 
     function consumeCheckoutDeal() {
