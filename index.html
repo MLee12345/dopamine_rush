@@ -1459,7 +1459,6 @@
           return;
         }
         fetchArtistPreviewTracks(concert).finally(() => {
-          if (state.activeTab === 'discover') renderConcerts();
           setTimeout(loadNext, 120);
         });
       };
@@ -2335,7 +2334,6 @@
           });
           concert.previewAvailable = uniqueTracks.length >= 3;
           concert.previewTracks = uniqueTracks.slice(0, 3);
-          if (!concert.previewAvailable && state.activeTab === 'discover') renderConcerts();
           return concert.previewTracks;
         } catch (error) {
           console.warn('Official artist preview unavailable', error);
