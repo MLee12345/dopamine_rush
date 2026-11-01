@@ -104,13 +104,13 @@
     }
     .seat-section.selected {
       stroke: #4f46e5;
-      stroke-width: 4px;
+      stroke-width: 2.5px;
       filter: drop-shadow(0 0 7px rgba(79, 70, 229, 0.24));
       opacity: 1 !important;
     }
     .section-label {
       fill: #312e81;
-      font-size: 9px;
+      font-size: 7.2px;
       font-weight: 800;
       pointer-events: none;
       dominant-baseline: middle;
@@ -2318,8 +2318,8 @@
       return Math.max(5.2, Math.min(base, 130 / Math.max(12, length)));
     }
 
-    function straightSectionLabel(section, x, y, base = 9, width = 130) {
-      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" style="font-size:${sectionLabelSize(section, Math.min(base, width / 12)).toFixed(1)}px">${shortSectionName(section)}</text>`;
+    function straightSectionLabel(section, x, y) {
+      return `<text class="section-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${shortSectionName(section)}</text>`;
     }
 
     function curvedSectionLabel(section, pathId, base = 8.5) {
@@ -2348,55 +2348,40 @@
           ${straightSectionLabel(back, 150, 50)}
         `,
         msg: `
-          <defs>
-            <path id="msg-front-label" d="M104 136 C122 129 178 129 196 136"/>
-            <path id="msg-middle-label" d="M77 101 C104 86 196 86 223 101"/>
-            <path id="msg-back-label" d="M48 60 C90 38 210 38 252 60"/>
-          </defs>
           ${stage}
-          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M94 139 C113 120 187 120 206 139 L194 153 C178 140 122 140 106 153 Z" fill="${fill(front.id)}" opacity="0.86"/>
-          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M60 101 C89 74 211 74 240 101 L221 116 C198 95 102 95 79 116 Z" fill="${fill(middle.id)}" opacity="0.86"/>
-          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M28 54 C67 19 233 19 272 54 L253 69 C217 43 83 43 47 69 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 138, 8.5, 100)}
-          ${straightSectionLabel(middle, 150, 100, 8.5, 145)}
-          ${straightSectionLabel(back, 150, 53, 8.5, 190)}
+          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M90 130 Q150 108 210 130 L196 146 Q150 128 104 146 Z" fill="${fill(front.id)}" opacity="0.86"/>
+          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M60 92 Q150 60 240 92 L222 108 Q150 82 78 108 Z" fill="${fill(middle.id)}" opacity="0.86"/>
+          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M30 54 Q150 12 270 54 L250 70 Q150 36 50 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
+          ${straightSectionLabel(front, 150, 129)}
+          ${straightSectionLabel(middle, 150, 86)}
+          ${straightSectionLabel(back, 150, 43)}
         `,
         redrocks: `
           ${stage}
-          <polygon id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" points="94,128 206,119 218,140 82,150" fill="${fill(front.id)}" opacity="0.86"/>
-          <polygon id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" points="63,86 237,71 252,95 48,114" fill="${fill(middle.id)}" opacity="0.86"/>
-          <polygon id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" points="40,36 260,18 273,43 27,65" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 134, 8.5, 105)}
-          ${straightSectionLabel(middle, 150, 93, 8.5, 155)}
-          ${straightSectionLabel(back, 150, 43, 8.5, 195)}
+          <polygon id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" points="94,130 206,122 216,142 84,150" fill="${fill(front.id)}" opacity="0.86"/>
+          <polygon id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" points="63,90 237,78 250,99 50,111" fill="${fill(middle.id)}" opacity="0.86"/>
+          <polygon id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" points="40,42 260,24 272,45 28,67" fill="${fill(back.id)}" opacity="0.86"/>
+          ${straightSectionLabel(front, 150, 136)}
+          ${straightSectionLabel(middle, 150, 95)}
+          ${straightSectionLabel(back, 150, 46)}
         `,
         o2: `
-          <defs>
-            <path id="o2-front-label" d="M98 137 C119 129 181 129 202 137"/>
-            <path id="o2-middle-label" d="M63 100 C97 84 203 84 237 100"/>
-            <path id="o2-back-label" d="M30 57 C75 35 225 35 270 57"/>
-          </defs>
           ${stage}
-          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M91 139 C110 120 190 120 209 139 L198 153 C180 140 120 140 102 153 Z" fill="${fill(front.id)}" opacity="0.86"/>
-          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M55 101 C84 74 216 74 245 101 L225 116 C200 96 100 96 75 116 Z" fill="${fill(middle.id)}" opacity="0.86"/>
-          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M21 54 C63 18 237 18 279 54 L256 69 C219 43 81 43 44 69 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 139, 8.5, 105)}
-          ${straightSectionLabel(middle, 150, 100, 8.5, 155)}
-          ${straightSectionLabel(back, 150, 53, 8.5, 200)}
+          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M88 130 Q150 106 212 130 L197 146 Q150 127 103 146 Z" fill="${fill(front.id)}" opacity="0.86"/>
+          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M54 92 Q150 57 246 92 L225 108 Q150 80 75 108 Z" fill="${fill(middle.id)}" opacity="0.86"/>
+          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M20 54 Q150 9 280 54 L256 70 Q150 33 44 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
+          ${straightSectionLabel(front, 150, 128)}
+          ${straightSectionLabel(middle, 150, 84)}
+          ${straightSectionLabel(back, 150, 41)}
         `,
         hollywoodbowl: `
-          <defs>
-            <path id="hb-front-label" d="M107 139 C126 129 174 129 193 139"/>
-            <path id="hb-middle-label" d="M82 103 C109 88 191 88 218 103"/>
-            <path id="hb-back-label" d="M54 62 C92 40 208 40 246 62"/>
-          </defs>
           ${stage}
-          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M102 142 L198 142 L208 121 C182 110 118 110 92 121 Z" fill="${fill(front.id)}" opacity="0.86"/>
-          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M65 103 C92 77 208 77 235 103 L215 118 C191 99 109 99 85 118 Z" fill="${fill(middle.id)}" opacity="0.86"/>
-          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M29 54 C69 19 231 19 271 54 L247 69 C211 44 89 44 53 69 Z" fill="${fill(back.id)}" opacity="0.86"/>
-          ${straightSectionLabel(front, 150, 132, 8.5, 95)}
-          ${straightSectionLabel(middle, 150, 101, 8.5, 140)}
-          ${straightSectionLabel(back, 150, 53, 8.5, 190)}
+          <path id="svg-${front.id}" onclick="selectSectionById('${front.id}')" class="seat-section" d="M92 130 Q150 109 208 130 L195 146 Q150 129 105 146 Z" fill="${fill(front.id)}" opacity="0.86"/>
+          <path id="svg-${middle.id}" onclick="selectSectionById('${middle.id}')" class="seat-section" d="M62 92 Q150 61 238 92 L220 108 Q150 83 80 108 Z" fill="${fill(middle.id)}" opacity="0.86"/>
+          <path id="svg-${back.id}" onclick="selectSectionById('${back.id}')" class="seat-section" d="M30 54 Q150 13 270 54 L248 70 Q150 37 52 70 Z" fill="${fill(back.id)}" opacity="0.86"/>
+          ${straightSectionLabel(front, 150, 130)}
+          ${straightSectionLabel(middle, 150, 86)}
+          ${straightSectionLabel(back, 150, 43)}
         `
       };
       const svgHtml = `<svg viewBox="0 0 300 200" class="w-full h-full max-w-[620px]">${layouts[venue.id] || layouts.sphere}</svg>`;
