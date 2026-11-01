@@ -1368,17 +1368,6 @@
       });
     });
 
-    const ROTATING_ARTIST_PREFIXES = [
-      'Neon', 'Velvet', 'Midnight', 'Golden', 'Electric', 'Crystal', 'Nova', 'Static', 'Royal', 'Future',
-      'Silver', 'Echo', 'Starlight', 'Analog', 'Lunar', 'Prism', 'Afterglow', 'Cosmic', 'Sonic', 'Horizon'
-    ];
-    const ROTATING_ARTIST_SUFFIXES = [
-      'Hearts', 'District', 'Pulse', 'Theory', 'Club', 'Choir', 'Signals', 'Garden', 'Motion', 'Dreams',
-      'Wave', 'Parade', 'Room', 'Saints', 'Bloom', 'Arcade', 'Frequency', 'Weather', 'Cinema', 'Rush'
-    ];
-    const ROTATING_TOURS = ['Night Market Live', 'Signal Bloom', 'Main Character Tour', 'After Hours Run', 'Velvet Circuit', 'City Lights Set', 'Soft Launch Live', 'The Rush Hour'];
-    const ROTATING_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Electronic'];
-
     function getUniqueConcertImage(idx, genre = 'concert') {
       const genreSlug = String(genre).toLowerCase().replace(/[^a-z0-9]+/g, '');
       return `https://loremflickr.com/1000/700/concert,stage,${genreSlug}?lock=${1200 + idx}`;
@@ -1399,39 +1388,40 @@
       return { label: `${day}, ${month} ${dateNum} • ${hour}:${minute} PM`, key };
     }
 
-    function generateRotatingConcerts(count = 500) {
+    function generateYearRoundConcerts(totalCount = 500) {
+      const seedConcerts = [...CONCERTS];
       const venueIds = Object.keys(VENUES);
-      for (let idx = 0; idx < count; idx++) {
-        const artist = `${ROTATING_ARTIST_PREFIXES[idx % ROTATING_ARTIST_PREFIXES.length]} ${ROTATING_ARTIST_SUFFIXES[Math.floor(idx / ROTATING_ARTIST_PREFIXES.length) % ROTATING_ARTIST_SUFFIXES.length]} ${idx + 1}`;
-        const venueId = venueIds[idx % venueIds.length];
-        const genre = ROTATING_GENRES[idx % ROTATING_GENRES.length];
-        const tour = ROTATING_TOURS[idx % ROTATING_TOURS.length];
-        const basePrice = 45 + (idx % 28) * 8;
-        const rotatingDate = formatRotatingDate((idx % 96) + 1, 6 + (idx % 4));
+      const generatedCount = Math.max(0, totalCount - CONCERTS.length);
+      for (let idx = 0; idx < generatedCount; idx++) {
+        const source = seedConcerts[idx % seedConcerts.length];
+        const venueId = venueIds[(idx + seedConcerts.indexOf(source)) % venueIds.length];
+        const dayOffset = 1 + Math.floor((idx / Math.max(1, generatedCount)) * 365);
+        const rotatingDate = formatRotatingDate(dayOffset, 6 + (idx % 4));
         CONCERTS.push({
-          id: `rotating-${idx}`,
-          artist,
-          tour,
-          genre,
+          id: `${source.id}-year-${idx + 1}`,
+          artist: source.artist,
+          tour: source.tour,
+          genre: source.genre,
           venueId,
           date: rotatingDate.label,
           dateKey: rotatingDate.key,
           isLiveNow: false,
           isEnded: false,
           soldOut: false,
-          priceFrom: basePrice,
-          image: getUniqueConcertImage(idx + 100, genre),
-          rotating: true,
-          merch: [
-            { id: `rot-${idx}-tee`, name: `${artist} Tee`, price: 40 + (idx % 5) * 5, sizes: ['S', 'M', 'L', 'XL'], img: getUniqueMerchImage(idx, 'tee') },
-            { id: `rot-${idx}-cap`, name: `${tour.split(' ')[0]} Cap`, price: 32 + (idx % 4) * 4, sizes: ['One size'], img: getUniqueMerchImage(idx, 'cap') }
-          ],
-          playlist: [`${artist} - Arrival`, `${artist} - Live Favorite`, `${artist} - Finale`]
+          priceFrom: Math.max(45, source.priceFrom + ((idx % 9) - 4) * 5),
+          image: getUniqueConcertImage(idx + 100, source.genre),
+          generated: true,
+          merch: source.merch.map((item, itemIdx) => ({
+            ...item,
+            id: `${source.id}-year-${idx + 1}-merch-${itemIdx + 1}`,
+            img: getUniqueMerchImage(idx * 3 + itemIdx, item.name)
+          })),
+          playlist: source.playlist ? [...source.playlist] : []
         });
       }
     }
 
-    generateRotatingConcerts(500);
+    generateYearRoundConcerts(500);
 
     CONCERTS.forEach((concert, idx) => {
       concert.image = getUniqueConcertImage(idx, concert.genre);
@@ -1443,26 +1433,34 @@
     });
 
     function getPreviewCatalogConcerts() {
-      return CONCERTS.filter(concert => !concert.rotating && concert.previewAvailable !== false);
+      return CONCERTS.filter(concert => concert.previewAvailable !== false);
     }
 
     function hydratePreviewCatalog() {
-      const previewableConcerts = CONCERTS.filter(concert => !concert.rotating);
+      const artistGroups = [...CONCERTS.reduce((groups, concert) => {
+        const key = normalizeArtistName(concert.artist);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(concert);
+        return groups;
+      }, new Map()).values()];
       let index = 0;
-      const loadNext = () => {
-        const concert = previewableConcerts[index++];
-        if (!concert) {
-          if (state.activeTab === 'discover') {
-            initFilters();
-            renderConcerts();
-          }
-          return;
+      const hydrateNextArtist = async () => {
+        while (index < artistGroups.length) {
+          const group = artistGroups[index++];
+          const tracks = await fetchArtistPreviewTracks(group[0]);
+          group.forEach(concert => {
+            concert.previewTracks = tracks;
+            concert.previewAvailable = tracks.length >= 3;
+          });
         }
-        fetchArtistPreviewTracks(concert).finally(() => {
-          setTimeout(loadNext, 120);
-        });
       };
-      loadNext();
+      const workerCount = Math.min(4, artistGroups.length);
+      Promise.all(Array.from({ length: workerCount }, hydrateNextArtist)).finally(() => {
+        if (state.activeTab === 'discover') {
+          initFilters();
+          renderConcerts();
+        }
+      });
     }
 
     /* ==========================================================================
@@ -2297,8 +2295,14 @@
 
     async function fetchArtistPreviewTracks(concert) {
       if (!concert || concert.rotating) return [];
-      if (concert.previewTracks?.length) return concert.previewTracks;
-      if (state.artistPreviewCache.has(concert.artist)) return state.artistPreviewCache.get(concert.artist);
+      if (concert.previewTracks?.length >= 3) return concert.previewTracks;
+      const cacheKey = normalizeArtistName(concert.artist);
+      if (state.artistPreviewCache.has(cacheKey)) {
+        const cachedTracks = await state.artistPreviewCache.get(cacheKey);
+        concert.previewTracks = cachedTracks;
+        concert.previewAvailable = cachedTracks.length >= 3;
+        return cachedTracks;
+      }
 
       const request = (async () => {
         try {
@@ -2314,9 +2318,13 @@
           if (!response.ok) throw new Error(`Preview search failed: ${response.status}`);
           const payload = await response.json();
           const requestedArtist = normalizeArtistName(concert.artist);
-          const exactMatches = (payload.results || []).filter(result =>
-            result.previewUrl && normalizeArtistName(result.artistName) === requestedArtist
-          );
+          const exactMatches = (payload.results || []).filter(result => {
+            if (!result.previewUrl) return false;
+            const resultArtist = normalizeArtistName(result.artistName);
+            return resultArtist === requestedArtist ||
+              resultArtist.startsWith(`${requestedArtist} `) ||
+              requestedArtist.startsWith(`${resultArtist} `);
+          });
           const uniqueTracks = [];
           const seen = new Set();
           exactMatches.forEach(result => {
@@ -2337,12 +2345,16 @@
           return concert.previewTracks;
         } catch (error) {
           console.warn('Official artist preview unavailable', error);
+          concert.previewAvailable = false;
           return [];
         }
       })();
 
-      state.artistPreviewCache.set(concert.artist, request);
-      return request;
+      state.artistPreviewCache.set(cacheKey, request);
+      const tracks = await request;
+      concert.previewTracks = tracks;
+      concert.previewAvailable = tracks.length >= 3;
+      return tracks;
     }
 
     function renderTicketPreviewTracks() {
