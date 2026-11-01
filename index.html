@@ -727,7 +727,7 @@
         <canvas id="stageCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
 
         <button onclick="openMerchQueueForCurrentStage()" class="absolute right-4 top-4 sm:right-6 sm:top-6 z-20 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-          <i class="fa-solid fa-bag-shopping"></i> Merch
+          <i class="fa-solid fa-bag-shopping"></i> Buy Merch
         </button>
 
         <!-- Artist Playlist Controls -->
@@ -2752,6 +2752,7 @@
       const audio = new Audio(track.streamUrl || track.previewUrl);
       audio.preload = 'none';
       audio.volume = 0.72;
+      audio.loop = Boolean(options.advanceStage);
       const seekToRequestedOffset = () => {
         const offset = Number(options.startAtSeconds) || 0;
         if (!offset) return;
@@ -2771,16 +2772,7 @@
         if (icon) icon.className = 'fa-solid fa-pause';
         audio.addEventListener('ended', () => {
           if (state.previewAudio !== audio) return;
-          if (options.advanceStage) {
-            isAudioPlaying = true;
-            if (state.stageAudioLooping) {
-              try { audio.currentTime = 0; } catch (error) {}
-              audio.play().catch(() => {});
-            }
-            updatePreviewPlaybackUI();
-          } else {
-            stopPreviewMusic();
-          }
+          stopPreviewMusic();
         }, { once: true });
         return true;
       } catch (error) {
